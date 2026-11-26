@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/layout :: head('Quản lý Mượn / Trả sách')}"></head>
 <body>
 <div class="admin-wrapper">
@@ -9,55 +9,119 @@
         <div class="admin-content">
             <div th:replace="~{fragments/layout :: alerts}"></div>
 
-            <div class="btn-group mb-3">
-                <a th:href="@{/admin/borrows}" class="btn btn-sm"
-                   th:classappend="${selectedStatus == null or selectedStatus == ''} ? 'btn-primary' : 'btn-outline-primary'">Tất cả</a>
-                <a th:href="@{/admin/borrows(status='PENDING')}" class="btn btn-sm"
-                   th:classappend="${selectedStatus == 'PENDING'} ? 'btn-warning' : 'btn-outline-warning'">Chờ duyệt</a>
-                <a th:href="@{/admin/borrows(status='APPROVED')}" class="btn btn-sm"
-                   th:classappend="${selectedStatus == 'APPROVED'} ? 'btn-info' : 'btn-outline-info'">Đang mượn</a>
-                <a th:href="@{/admin/borrows(status='RETURNED')}" class="btn btn-sm"
-                   th:classappend="${selectedStatus == 'RETURNED'} ? 'btn-success' : 'btn-outline-success'">Đã trả</a>
-                <a th:href="@{/admin/borrows(status='REJECTED')}" class="btn btn-sm"
-                   th:classappend="${selectedStatus == 'REJECTED'} ? 'btn-danger' : 'btn-outline-danger'">Từ chối</a>
+            <!-- Status Filter Pills & Search -->
+            <div class="card-modern mb-4">
+                <div class="card-body">
+                    <div class="status-filter-pills mb-3">
+                        <a th:href="@{/admin/borrows(keyword=${keyword != null and !keyword.isBlank() ? keyword : null})}"
+                           class="status-pill"
+                           th:classappend="${selectedStatus == null or selectedStatus == ''} ? 'active'">
+                            <span>Tất cả</span>
+                            <span class="badge bg-secondary bg-opacity-25 text-dark rounded-pill" th:text="${allCount}">0</span>
+                        </a>
+                        <a th:href="@{/admin/borrows(status='PENDING', keyword=${keyword != null and !keyword.isBlank() ? keyword : null})}"
+                           class="status-pill"
+                           th:classappend="${selectedStatus == 'PENDING'} ? 'active'">
+                            <span>Chờ duyệt</span>
+                            <span class="badge bg-warning text-dark rounded-pill" th:text="${pendingCount}">0</span>
+                        </a>
+                        <a th:href="@{/admin/borrows(status='APPROVED', keyword=${keyword != null and !keyword.isBlank() ? keyword : null})}"
+                           class="status-pill"
+                           th:classappend="${selectedStatus == 'APPROVED'} ? 'active'">
+                            <span>Đang mượn</span>
+                            <span class="badge bg-info text-dark rounded-pill" th:text="${approvedCount}">0</span>
+                        </a>
+                        <a th:href="@{/admin/borrows(status='RETURNED', keyword=${keyword != null and !keyword.isBlank() ? keyword : null})}"
+                           class="status-pill"
+                           th:classappend="${selectedStatus == 'RETURNED'} ? 'active'">
+                            <span>Đã trả</span>
+                            <span class="badge bg-success rounded-pill" th:text="${returnedCount}">0</span>
+                        </a>
+                        <a th:href="@{/admin/borrows(status='REJECTED', keyword=${keyword != null and !keyword.isBlank() ? keyword : null})}"
+                           class="status-pill"
+                           th:classappend="${selectedStatus == 'REJECTED'} ? 'active'">
+                            <span>Từ chối</span>
+                            <span class="badge bg-danger rounded-pill" th:text="${rejectedCount}">0</span>
+                        </a>
+                        <a th:href="@{/admin/borrows(status='CANCELLED', keyword=${keyword != null and !keyword.isBlank() ? keyword : null})}"
+                           class="status-pill"
+                           th:classappend="${selectedStatus == 'CANCELLED'} ? 'active'">
+                            <span>Đã hủy</span>
+                            <span class="badge bg-secondary rounded-pill" th:text="${cancelledCount}">0</span>
+                        </a>
+                    </div>
+
+                    <form class="row g-2 align-items-center" th:action="@{/admin/borrows}" method="get">
+                        <input th:if="${selectedStatus != null and !selectedStatus.isBlank()}" type="hidden" name="status" th:value="${selectedStatus}">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                                       placeholder="Tìm theo mã phiếu, tên độc giả hoặc username...">
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex gap-2 justify-content-md-end">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                            </button>
+                            <a th:if="${(keyword != null and !keyword.isBlank()) or (selectedStatus != null and !selectedStatus.isBlank())}"
+                               th:href="@{/admin/borrows}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div class="card border-0 shadow-sm">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Mã phiếu</th>
-                        <th>Độc giả</th>
-                        <th>Số sách</th>
-                        <th>Ngày gửi</th>
-                        <th>Hạn trả</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:if="${#lists.isEmpty(borrows)}">
-                        <td colspan="7" class="text-center py-4 text-muted">Không có phiếu mượn nào.</td>
-                    </tr>
-                    <tr th:each="req : ${borrows}">
-                        <td class="fw-semibold" th:text="${'#' + req.id}"></td>
-                        <td th:text="${req.user.fullName + ' (' + req.user.username + ')'}"></td>
-                        <td th:text="${#lists.size(req.details)}"></td>
-                        <td th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
-                        <td th:text="${req.dueDate != null ? #temporals.format(req.dueDate, 'dd/MM/yyyy') : '-'}"></td>
-                        <td>
-                            <span class="badge"
-                                  th:classappend="${req.status == 'PENDING' ? 'bg-warning text-dark' :
-                                                   (req.status == 'APPROVED' ? 'bg-info text-dark' :
-                                                   (req.status == 'RETURNED' ? 'bg-success' : 'bg-danger'))}"
-                                  th:text="${req.status}"></span>
-                        </td>
-                        <td class="text-end">
-                            <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-primary">Xử lý / Chi tiết</a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="card-modern">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Độc giả</th>
+                            <th>Số đầu sách</th>
+                            <th>Ngày gửi</th>
+                            <th>Hạn trả</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(borrows)}">
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
+                                Không có phiếu mượn nào phù hợp.
+                            </td>
+                        </tr>
+                        <tr th:each="req : ${borrows}">
+                            <td class="fw-bold text-primary" th:text="${'#' + req.id}"></td>
+                            <td>
+                                <div class="fw-semibold" th:text="${req.user.fullName}"></div>
+                                <div class="small text-muted" th:text="${'@' + req.user.username}"></div>
+                            </td>
+                            <td>
+                                <span class="badge-soft badge-soft-indigo" th:text="${#lists.size(req.details) + ' đầu sách'}"></span>
+                            </td>
+                            <td class="small text-muted" th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                            <td class="small" th:text="${req.dueDate != null ? #temporals.format(req.dueDate, 'dd/MM/yyyy') : '-'}"></td>
+                            <td>
+                                <span class="badge-soft"
+                                      th:classappend="${req.status == 'PENDING' ? 'badge-soft-warning' :
+                                                       (req.status == 'APPROVED' ? 'badge-soft-info' :
+                                                       (req.status == 'RETURNED' ? 'badge-soft-success' : 'badge-soft-danger'))}"
+                                      th:text="${req.status}"></span>
+                            </td>
+                            <td class="text-end">
+                                <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-sliders me-1"></i>Xử lý / Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:replace="~{fragments/layout :: pagination(${borrowPage}, '/admin/borrows')}"></div>
             </div>
         </div>
     </div>

@@ -1,27 +1,42 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head(${author.id != null ? 'Sửa tác giả' : 'Thêm tác giả'})}"></head>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/layout :: head(${author.id != null ? 'Cập nhật Tác giả' : 'Thêm Tác giả Mới'})}"></head>
 <body>
 <div class="admin-wrapper">
     <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
     <div class="admin-main">
         <header th:replace="~{fragments/layout :: topbar(${author.id != null ? 'Cập nhật Tác giả' : 'Thêm Tác giả Mới'})}"></header>
         <div class="admin-content">
-            <div class="card border-0 shadow-sm" style="max-width: 640px;">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card-modern" style="max-width: 680px;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold" th:text="${author.id != null ? 'Chỉnh sửa tác giả #' + author.id : 'Thông tin tác giả mới'}"></h6>
+                    <a th:href="@{/admin/authors}" class="btn btn-sm btn-outline-secondary">← Quay lại</a>
+                </div>
                 <div class="card-body p-4">
-                    <form th:action="@{/admin/authors/save}" method="post">
-                        <input type="hidden" name="id" th:value="${author.id}">
+                    <form th:action="@{/admin/authors/save}" th:object="${author}" method="post"
+                          class="needs-validation" novalidate>
+                        <input type="hidden" th:field="*{id}">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Tên tác giả *</label>
-                            <input type="text" class="form-control" name="name" th:value="${author.name}" required>
+                            <label class="form-label fw-semibold" for="authorName">Tên tác giả <span class="text-danger">*</span></label>
+                            <input id="authorName" type="text" class="form-control" th:field="*{name}"
+                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                   maxlength="100" required placeholder="VD: Robert C. Martin">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                            <div class="invalid-feedback" th:unless="${#fields.hasErrors('name')}">Vui lòng nhập tên tác giả (tối đa 100 ký tự).</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Tiểu sử</label>
-                            <textarea class="form-control" name="biography" rows="4" th:text="${author.biography}"></textarea>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="authorBio">Tiểu sử</label>
+                            <textarea id="authorBio" class="form-control" th:field="*{biography}" rows="4"
+                                      placeholder="Thông tin tiểu sử và tác phẩm nổi bật..."></textarea>
                         </div>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Lưu</button>
+                        <div class="d-flex justify-content-end gap-2">
                             <a th:href="@{/admin/authors}" class="btn btn-outline-secondary">Hủy</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                <span th:text="${author.id != null ? 'Cập nhật' : 'Lưu tác giả'}">Lưu</span>
+                            </button>
                         </div>
                     </form>
                 </div>

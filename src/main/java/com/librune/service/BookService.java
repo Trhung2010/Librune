@@ -5,6 +5,9 @@ import com.librune.entity.Book;
 import com.librune.entity.Category;
 import com.librune.repository.BookRepository;
 import com.librune.repository.BorrowDetailRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +59,16 @@ public class BookService {
         );
     }
 
+    public Page<Book> searchPage(String keyword, Long categoryId, boolean availableOnly, int page, int size) {
+        Pageable pageable = PaginationSupport.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        String cleanKeyword = keyword != null ? keyword.trim() : null;
+        return bookRepository.searchBooksPage(cleanKeyword, categoryId, availableOnly, pageable);
+    }
+
+    public List<Book> findLowStock(int threshold) {
+        return bookRepository.findTop5ByAvailableQuantityLessThanEqualOrderByAvailableQuantityAsc(threshold);
+    }
+
     public Book findById(Long id) {
         return bookRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sách #" + id));
@@ -74,7 +87,16 @@ public class BookService {
         }
 
         target.setTitle(formBook.getTitle() != null ? formBook.getTitle().trim() : null);
-        target.setIsbn(formBook.getIsbn() != null && !formBook.getIsbn().isBlank() ? formBook.getIsbn().trim() : null);
+        String cleanIsbn = formBook.getIsbn() != null && !formBook.getIsbn().isBlank() ? formBook.getIsbn().trim() : null;
+        if (cleanIsbn != null) {
+            boolean duplicateIsbn = target.getId() == null
+                    ? bookRepository.existsByIsbn(cleanIsbn)
+                    : bookRepository.existsByIsbnAndIdNot(cleanIsbn, target.getId());
+            if (duplicateIsbn) {
+                throw new IllegalArgumentException("Mã ISBN '" + cleanIsbn + "' đã tồn tại trong hệ thống");
+            }
+        }
+        target.setIsbn(cleanIsbn);
         target.setPublisher(formBook.getPublisher());
         target.setPublishYear(formBook.getPublishYear());
         target.setDescription(formBook.getDescription());

@@ -1,8 +1,11 @@
 package com.librune.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,15 +26,20 @@ public class Book {
     private Category category;
 
     @NotBlank
+    @Size(max = 255)
     @Column(nullable = false, length = 255)
     private String title;
 
+    @Size(max = 30)
     @Column(unique = true, length = 30)
     private String isbn;
 
+    @Size(max = 150)
     @Column(length = 150)
     private String publisher;
 
+    @Min(1000)
+    @Max(2030)
     @Column(name = "publish_year")
     private Integer publishYear;
 
@@ -46,6 +54,11 @@ public class Book {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Pattern(
+            regexp = "^(https?://.+|/uploads/.+)?$",
+            message = "Ảnh bìa phải là đường dẫn URL hợp lệ (http/https hoặc /uploads/...)"
+    )
+    @Size(max = 255)
     @Column(name = "cover_image", length = 500)
     private String coverImage;
 

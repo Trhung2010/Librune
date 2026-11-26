@@ -6,6 +6,7 @@ import com.librune.service.BorrowService;
 import com.librune.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,11 +27,15 @@ public class BorrowApiController {
 
     @SuppressWarnings("unchecked")
     @PostMapping
-    public ResponseEntity<BorrowRequest> createBorrowRequest(
+    public ResponseEntity<?> createBorrowRequest(
             Authentication authentication,
             @RequestBody Map<String, Object> body) {
+        Object rawItems = body.get("items");
+        if (!(rawItems instanceof List<?>)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid request format"));
+        }
         User reader = userService.findByUsername(authentication.getName());
-        List<Map<String, Object>> items = (List<Map<String, Object>>) body.get("items");
+        List<Map<String, Object>> items = (List<Map<String, Object>>) rawItems;
         String note = body.get("note") != null ? body.get("note").toString() : null;
         BorrowRequest created = borrowService.createRequest(reader, items, note);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -40,6 +45,12 @@ public class BorrowApiController {
     public List<BorrowRequest> getMyBorrows(
             Authentication authentication,
             @RequestParam(required = false) String status) {
+        if (status != null && !status.isBlank()) {
+            String upper = status.trim().toUpperCase();
+            if (!BorrowRequest.VALID_STATUSES.contains(upper)) {
+                throw new IllegalArgumentException("Trạng thái phiếu mượn không hợp lệ: " + status);
+            }
+        }
         User reader = userService.findByUsername(authentication.getName());
         return borrowService.findByUser(reader.getId(), status);
     }
@@ -51,7 +62,7 @@ public class BorrowApiController {
         User reader = userService.findByUsername(authentication.getName());
         BorrowRequest request = borrowService.findById(id);
         if (!request.getUser().getId().equals(reader.getId())) {
-            throw new IllegalStateException("Bạn không có quyền xem phiếu mượn này");
+            throw new AccessDeniedException("Bạn không có quyền xem phiếu mượn này");
         }
         return request;
     }

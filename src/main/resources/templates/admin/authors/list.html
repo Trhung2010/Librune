@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/layout :: head('Quản lý Tác giả')}"></head>
 <body>
 <div class="admin-wrapper">
@@ -9,15 +9,24 @@
         <div class="admin-content">
             <div th:replace="~{fragments/layout :: alerts}"></div>
 
-            <div class="card border-0 shadow-sm mb-3">
+            <div class="card-modern mb-4">
                 <div class="card-body">
                     <form class="row g-2 align-items-center" th:action="@{/admin/authors}" method="get">
-                        <div class="col-md-6">
-                            <input type="text" class="form-control" name="keyword" th:value="${keyword}"
-                                   placeholder="Tìm theo tên tác giả...">
+                        <div class="col-md-7">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                                       placeholder="Tìm theo tên tác giả...">
+                            </div>
                         </div>
-                        <div class="col-md-6 d-flex gap-2 justify-content-end">
-                            <button type="submit" class="btn btn-outline-primary">Tìm</button>
+                        <div class="col-md-5 d-flex flex-wrap gap-2 justify-content-md-end">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-search me-1"></i>Tìm
+                            </button>
+                            <a th:if="${keyword != null and !keyword.isBlank()}" th:href="@{/admin/authors}"
+                               class="btn btn-outline-secondary" title="Xóa tìm kiếm">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
                             <a th:href="@{/admin/authors/new}" class="btn btn-primary">
                                 <i class="bi bi-plus-lg me-1"></i>Thêm tác giả
                             </a>
@@ -26,34 +35,44 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên tác giả</th>
-                        <th>Tiểu sử</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:if="${#lists.isEmpty(authors)}">
-                        <td colspan="4" class="text-center py-4 text-muted">Không có tác giả nào.</td>
-                    </tr>
-                    <tr th:each="a : ${authors}">
-                        <td th:text="${a.id}"></td>
-                        <td class="fw-semibold" th:text="${a.name}"></td>
-                        <td th:text="${a.biography}"></td>
-                        <td class="text-end">
-                            <a th:href="@{'/admin/authors/' + ${a.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">Sửa</a>
-                            <form th:action="@{'/admin/authors/' + ${a.id} + '/delete'}" method="post" class="d-inline"
-                                  onsubmit="return confirm('Xác nhận xóa tác giả này?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-                            </form>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="card-modern">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>Tên tác giả</th>
+                            <th>Tiểu sử</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(authors)}">
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-pen fs-2 d-block mb-2 opacity-50"></i>
+                                Không có tác giả nào.
+                            </td>
+                        </tr>
+                        <tr th:each="a : ${authors}">
+                            <td class="text-muted fw-medium" th:text="${'#' + a.id}"></td>
+                            <td class="fw-semibold" th:text="${a.name}"></td>
+                            <td class="small text-muted" th:text="${a.biography != null and !a.biography.isBlank() ? a.biography : '-'}"></td>
+                            <td class="text-end text-nowrap">
+                                <a th:href="@{'/admin/authors/' + ${a.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil me-1"></i>Sửa
+                                </a>
+                                <form th:action="@{'/admin/authors/' + ${a.id} + '/delete'}" method="post" class="d-inline"
+                                      th:attr="data-confirm=${'Xác nhận xóa tác giả &quot;' + a.name + '&quot;?'}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash me-1"></i>Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:replace="~{fragments/layout :: pagination(${authorPage}, '/admin/authors')}"></div>
             </div>
         </div>
     </div>

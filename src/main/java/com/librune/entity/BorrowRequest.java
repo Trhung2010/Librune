@@ -1,9 +1,11 @@
 package com.librune.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.FutureOrPresent;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a reader's borrow request and its approval/return lifecycle.
@@ -17,6 +19,14 @@ public class BorrowRequest {
     public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_RETURNED = "RETURNED";
     public static final String STATUS_CANCELLED = "CANCELLED";
+
+    public static final Set<String> VALID_STATUSES = Set.of(
+            STATUS_PENDING,
+            STATUS_APPROVED,
+            STATUS_REJECTED,
+            STATUS_RETURNED,
+            STATUS_CANCELLED
+    );
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +49,7 @@ public class BorrowRequest {
     @Column(name = "borrow_date", columnDefinition = "DATETIME")
     private LocalDateTime borrowDate;
 
+    @FutureOrPresent(message = "Hạn trả phải ở hiện tại hoặc tương lai")
     @Column(name = "due_date", columnDefinition = "DATETIME")
     private LocalDateTime dueDate;
 

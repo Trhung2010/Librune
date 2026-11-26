@@ -3,6 +3,7 @@ package com.librune.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ public class Author {
     private Long id;
 
     @NotBlank
+    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String name;
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/layout :: head('Chi tiết Độc giả')}"></head>
 <body>
 <div class="admin-wrapper">
@@ -7,34 +7,53 @@
     <div class="admin-main">
         <header th:replace="~{fragments/layout :: topbar('Thông tin Độc giả')}"></header>
         <div class="admin-content">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card-modern mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                         <div>
-                            <h5 class="fw-bold mb-1" th:text="${reader.fullName}"></h5>
-                            <p class="text-muted mb-2" th:text="${'@' + reader.username + ' • ' + (reader.email != null ? reader.email : 'Chưa có email')}"></p>
-                            <div class="small">
-                                <strong>SĐT:</strong> <span th:text="${reader.phone != null ? reader.phone : '-'}"></span> |
-                                <strong>Địa chỉ:</strong> <span th:text="${reader.address != null ? reader.address : '-'}"></span>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h4 class="fw-bold mb-0" th:text="${reader.fullName}"></h4>
+                                <span class="badge-soft"
+                                      th:classappend="${reader.status == 'ACTIVE'} ? 'badge-soft-success' : 'badge-soft-danger'"
+                                      th:text="${reader.status == 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}"></span>
+                            </div>
+                            <p class="text-muted mb-3" th:text="${'@' + reader.username + ' • ' + (reader.email != null ? reader.email : 'Chưa có email')}"></p>
+                            <div class="d-flex flex-wrap gap-4 small">
+                                <div><i class="bi bi-telephone text-primary me-1"></i><strong>SĐT:</strong> <span th:text="${reader.phone != null ? reader.phone : '-'}"></span></div>
+                                <div><i class="bi bi-geo-alt text-primary me-1"></i><strong>Địa chỉ:</strong> <span th:text="${reader.address != null ? reader.address : '-'}"></span></div>
+                                <div><i class="bi bi-calendar3 text-primary me-1"></i><strong>Ngày tham gia:</strong> <span th:text="${reader.createdAt != null ? #temporals.format(reader.createdAt, 'dd/MM/yyyy') : '-'}"></span></div>
                             </div>
                         </div>
-                        <span class="badge fs-6"
-                              th:classappend="${reader.status == 'ACTIVE'} ? 'bg-success' : 'bg-danger'"
-                              th:text="${reader.status}"></span>
+                        <div class="d-flex gap-2">
+                            <form th:action="@{'/admin/readers/' + ${reader.id} + '/toggle-status'}" method="post"
+                                  th:attr="data-confirm=${reader.status == 'ACTIVE' ? 'Xác nhận khóa tài khoản ' + reader.username + '?' : 'Xác nhận mở khóa tài khoản ' + reader.username + '?'}">
+                                <input type="hidden" name="returnTo" value="detail">
+                                <button type="submit" class="btn btn-sm"
+                                        th:classappend="${reader.status == 'ACTIVE'} ? 'btn-outline-danger' : 'btn-outline-success'"
+                                        th:text="${reader.status == 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}"></button>
+                            </form>
+                            <a th:href="@{/admin/readers}" class="btn btn-sm btn-outline-secondary">← Quay lại</a>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white fw-bold py-3">Lịch sử mượn sách</div>
-                <div class="card-body p-0">
-                    <div th:if="${#lists.isEmpty(borrowHistory)}" class="p-4 text-center text-muted">
+            <div class="card-modern">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Lịch sử mượn sách</h6>
+                    <span class="badge-soft badge-soft-indigo" th:text="${#lists.size(borrowHistory) + ' phiếu'}">0 phiếu</span>
+                </div>
+                <div class="table-responsive">
+                    <div th:if="${#lists.isEmpty(borrowHistory)}" class="p-5 text-center text-muted">
                         Độc giả chưa có lượt mượn nào.
                     </div>
-                    <table th:if="${!#lists.isEmpty(borrowHistory)}" class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
+                    <table th:if="${!#lists.isEmpty(borrowHistory)}" class="table table-modern mb-0">
+                        <thead>
                         <tr>
                             <th>Phiếu</th>
+                            <th>Số đầu sách</th>
                             <th>Ngày gửi</th>
                             <th>Hạn trả</th>
                             <th>Trạng thái</th>
@@ -43,10 +62,17 @@
                         </thead>
                         <tbody>
                         <tr th:each="req : ${borrowHistory}">
-                            <td class="fw-semibold" th:text="${'#' + req.id}"></td>
-                            <td th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
-                            <td th:text="${req.dueDate != null ? #temporals.format(req.dueDate, 'dd/MM/yyyy') : '-'}"></td>
-                            <td><span class="badge bg-secondary" th:text="${req.status}"></span></td>
+                            <td class="fw-bold text-primary" th:text="${'#' + req.id}"></td>
+                            <td th:text="${#lists.size(req.details) + ' đầu sách'}"></td>
+                            <td class="small text-muted" th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                            <td class="small" th:text="${req.dueDate != null ? #temporals.format(req.dueDate, 'dd/MM/yyyy') : '-'}"></td>
+                            <td>
+                                <span class="badge-soft"
+                                      th:classappend="${req.status == 'PENDING' ? 'badge-soft-warning' :
+                                                       (req.status == 'APPROVED' ? 'badge-soft-info' :
+                                                       (req.status == 'RETURNED' ? 'badge-soft-success' : 'badge-soft-danger'))}"
+                                      th:text="${req.status}"></span>
+                            </td>
                             <td class="text-end">
                                 <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-outline-primary">Chi tiết</a>
                             </td>
@@ -54,10 +80,6 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div class="mt-3">
-                <a th:href="@{/admin/readers}" class="btn btn-outline-secondary">← Quay lại danh sách</a>
             </div>
         </div>
     </div>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/layout :: head(${book.id != null ? 'Sửa sách' : 'Thêm sách mới'})}"></head>
 <body>
 <div class="admin-wrapper">
@@ -7,72 +7,139 @@
     <div class="admin-main">
         <header th:replace="~{fragments/layout :: topbar(${book.id != null ? 'Cập nhật Sách' : 'Thêm Sách Mới'})}"></header>
         <div class="admin-content">
-            <div class="card border-0 shadow-sm">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card-modern">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold" th:text="${book.id != null ? 'Chỉnh sửa thông tin sách #' + book.id : 'Thông tin sách mới'}"></h6>
+                    <a th:href="@{/admin/books}" class="btn btn-sm btn-outline-secondary">← Quay lại danh sách</a>
+                </div>
                 <div class="card-body p-4">
-                    <form th:action="@{/admin/books/save}" method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="id" th:value="${book.id}">
+                    <form th:action="@{/admin/books/save}" th:object="${book}" method="post"
+                          enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <input type="hidden" th:field="*{id}">
+
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small">
+                            <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+                        </div>
+
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label class="form-label fw-semibold">Tiêu đề sách *</label>
-                                <input type="text" class="form-control" name="title" th:value="${book.title}" required>
+                                <label class="form-label fw-semibold" for="titleInput">Tiêu đề sách <span class="text-danger">*</span></label>
+                                <input id="titleInput" type="text" class="form-control" th:field="*{title}"
+                                       th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'"
+                                       maxlength="255" required placeholder="Nhập tiêu đề sách...">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                                <div class="invalid-feedback" th:unless="${#fields.hasErrors('title')}">Vui lòng nhập tiêu đề sách (tối đa 255 ký tự).</div>
                             </div>
+
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Mã ISBN</label>
-                                <input type="text" class="form-control" name="isbn" th:value="${book.isbn}">
+                                <label class="form-label fw-semibold" for="isbnInput">Mã ISBN</label>
+                                <input id="isbnInput" type="text" class="form-control" th:field="*{isbn}"
+                                       th:classappend="${#fields.hasErrors('isbn')} ? 'is-invalid'"
+                                       maxlength="30" placeholder="VD: 9780132350884">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('isbn')}" th:errors="*{isbn}"></div>
                             </div>
+
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Danh mục *</label>
-                                <select class="form-select" name="categoryId" required>
+                                <label class="form-label fw-semibold" for="categorySelect">Danh mục <span class="text-danger">*</span></label>
+                                <select id="categorySelect" class="form-select" name="categoryId" required>
+                                    <option value="">-- Chọn danh mục --</option>
                                     <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
-                                            th:selected="${book.category != null and book.category.id == c.id}"></option>
+                                            th:selected="${selectedCategoryId != null and selectedCategoryId == c.id}"></option>
                                 </select>
+                                <div class="invalid-feedback">Vui lòng chọn danh mục sách.</div>
                             </div>
+
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Nhà xuất bản</label>
-                                <input type="text" class="form-control" name="publisher" th:value="${book.publisher}">
+                                <label class="form-label fw-semibold" for="publisherInput">Nhà xuất bản</label>
+                                <input id="publisherInput" type="text" class="form-control" th:field="*{publisher}"
+                                       th:classappend="${#fields.hasErrors('publisher')} ? 'is-invalid'"
+                                       maxlength="150" placeholder="VD: NXB Trẻ">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('publisher')}" th:errors="*{publisher}"></div>
                             </div>
+
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Năm xuất bản</label>
-                                <input type="number" class="form-control" name="publishYear" th:value="${book.publishYear}">
+                                <label class="form-label fw-semibold" for="publishYearInput">Năm xuất bản</label>
+                                <input id="publishYearInput" type="number" min="1000" max="2100" class="form-control"
+                                       th:field="*{publishYear}"
+                                       th:classappend="${#fields.hasErrors('publishYear')} ? 'is-invalid'"
+                                       placeholder="VD: 2024">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('publishYear')}" th:errors="*{publishYear}"></div>
+                                <div class="invalid-feedback" th:unless="${#fields.hasErrors('publishYear')}">Năm xuất bản hợp lệ từ 1000 đến 2100.</div>
                             </div>
+
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Tổng số lượng *</label>
-                                <input type="number" min="0" class="form-control" name="totalQuantity"
-                                       th:value="${book.totalQuantity != null ? book.totalQuantity : 1}" required>
+                                <label class="form-label fw-semibold" for="totalQtyInput">Tổng số lượng <span class="text-danger">*</span></label>
+                                <input id="totalQtyInput" type="number" min="0" class="form-control" name="totalQuantity"
+                                       th:value="${book.totalQuantity != null ? book.totalQuantity : 1}"
+                                       th:classappend="${#fields.hasErrors('totalQuantity')} ? 'is-invalid'" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('totalQuantity')}" th:errors="*{totalQuantity}"></div>
+                                <div class="invalid-feedback" th:unless="${#fields.hasErrors('totalQuantity')}">Tổng số lượng phải từ 0 trở lên.</div>
                             </div>
+
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Số lượng còn *</label>
-                                <input type="number" min="0" class="form-control" name="availableQuantity"
-                                       th:value="${book.availableQuantity != null ? book.availableQuantity : 1}" required>
+                                <label class="form-label fw-semibold" for="availQtyInput">Số lượng còn <span class="text-danger">*</span></label>
+                                <input id="availQtyInput" type="number" min="0" class="form-control" name="availableQuantity"
+                                       th:value="${book.availableQuantity != null ? book.availableQuantity : 1}"
+                                       th:classappend="${#fields.hasErrors('availableQuantity')} ? 'is-invalid'" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('availableQuantity')}" th:errors="*{availableQuantity}"></div>
+                                <div class="invalid-feedback" th:unless="${#fields.hasErrors('availableQuantity')}">Số lượng còn phải từ 0 và không vượt quá tổng số lượng.</div>
                             </div>
+
                             <div class="col-md-4 d-flex align-items-end">
-                                <div class="form-check mb-2">
+                                <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="featured" value="true"
                                            id="featured" th:checked="${book.featured}">
                                     <label class="form-check-label fw-semibold" for="featured">Đánh dấu Sách nổi bật</label>
                                 </div>
                             </div>
+
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Tác giả (giữ Ctrl để chọn nhiều)</label>
-                                <select class="form-select" name="authorIds" multiple size="5">
+                                <label class="form-label fw-semibold" for="authorSelect">Tác giả (giữ Ctrl / Cmd để chọn nhiều)</label>
+                                <select id="authorSelect" class="form-select" name="authorIds" multiple size="6">
                                     <option th:each="a : ${authors}" th:value="${a.id}" th:text="${a.name}"
-                                            th:selected="${selectedAuthorIds.contains(a.id)}"></option>
+                                            th:selected="${selectedAuthorIds != null and selectedAuthorIds.contains(a.id)}"></option>
                                 </select>
                             </div>
+
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Upload ảnh bìa (jpg/png/webp)</label>
-                                <input type="file" class="form-control mb-2" name="coverFile" accept=".jpg,.jpeg,.png,.webp">
-                                <label class="form-label small text-muted">Hoặc nhập URL ảnh bìa hiện có:</label>
-                                <input type="text" class="form-control" name="coverImage" th:value="${book.coverImage}"
-                                       placeholder="/uploads/books/... hoặc https://...">
+                                <label class="form-label fw-semibold" for="coverFileInput">Ảnh bìa sách</label>
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="flex-shrink-0">
+                                        <img id="coverPreviewImg"
+                                             th:src="${book.coverImage}"
+                                             th:classappend="${book.coverImage == null or book.coverImage.isBlank()} ? 'd-none'"
+                                             class="book-cover-preview" alt="cover preview">
+                                        <div id="coverPreviewEmpty"
+                                             th:classappend="${book.coverImage != null and !book.coverImage.isBlank()} ? 'd-none'"
+                                             class="book-cover-preview d-flex align-items-center justify-content-center text-muted">
+                                            <i class="bi bi-image fs-2"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <input id="coverFileInput" type="file" class="form-control mb-2" name="coverFile"
+                                               accept=".jpg,.jpeg,.png,.webp">
+                                        <label class="form-label small text-muted mb-1" for="coverImageInput">Hoặc nhập URL ảnh bìa (http/https hoặc /uploads/...):</label>
+                                        <input id="coverImageInput" type="text" class="form-control" th:field="*{coverImage}"
+                                               th:classappend="${#fields.hasErrors('coverImage')} ? 'is-invalid'"
+                                               placeholder="/uploads/books/... hoặc https://...">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('coverImage')}" th:errors="*{coverImage}"></div>
+                                    </div>
+                                </div>
                             </div>
+
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Mô tả nội dung</label>
-                                <textarea class="form-control" name="description" rows="4" th:text="${book.description}"></textarea>
+                                <label class="form-label fw-semibold" for="descriptionInput">Mô tả nội dung</label>
+                                <textarea id="descriptionInput" class="form-control" th:field="*{description}" rows="4"
+                                          placeholder="Giới thiệu nội dung tóm tắt của cuốn sách..."></textarea>
                             </div>
                         </div>
+
                         <div class="mt-4 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Lưu sách</button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check2-circle me-1"></i>Lưu sách
+                            </button>
                             <a th:href="@{/admin/books}" class="btn btn-outline-secondary">Hủy</a>
                         </div>
                     </form>

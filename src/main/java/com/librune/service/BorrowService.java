@@ -5,7 +5,14 @@ import com.librune.entity.BorrowDetail;
 import com.librune.entity.BorrowRequest;
 import com.librune.entity.User;
 import com.librune.repository.BookRepository;
+import com.librune.repository.BorrowDetailRepository;
 import com.librune.repository.BorrowRequestRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,33 +28,60 @@ public class BorrowService {
 
     private final BorrowRequestRepository borrowRequestRepository;
     private final BookRepository bookRepository;
+    private final BorrowDetailRepository borrowDetailRepository;
     private final NotificationService notificationService;
 
     public BorrowService(
             BorrowRequestRepository borrowRequestRepository,
             BookRepository bookRepository,
+            BorrowDetailRepository borrowDetailRepository,
             NotificationService notificationService) {
         this.borrowRequestRepository = borrowRequestRepository;
         this.bookRepository = bookRepository;
+        this.borrowDetailRepository = borrowDetailRepository;
         this.notificationService = notificationService;
     }
 
     public List<BorrowRequest> findAll(String status) {
         if (status != null && !status.isBlank()) {
-            return borrowRequestRepository.findByStatusOrderByRequestDateDesc(status.trim().toUpperCase());
+            String upper = status.trim().toUpperCase();
+            if (!BorrowRequest.VALID_STATUSES.contains(upper)) {
+                throw new IllegalArgumentException("Trạng thái phiếu mượn không hợp lệ: " + status);
+            }
+            return borrowRequestRepository.findByStatusOrderByRequestDateDesc(upper);
         }
         return borrowRequestRepository.findAllByOrderByRequestDateDesc();
     }
 
-    public List<BorrowRequest> findByUser(Long userId, String status) {
-        List<BorrowRequest> all = borrowRequestRepository.findByUserIdOrderByRequestDateDesc(userId);
-        if (status == null || status.isBlank()) {
-            return all;
+    public Page<BorrowRequest> searchPage(String status, String keyword, int page, int size) {
+        Pageable pageable = PaginationSupport.of(page, size, Sort.by(Sort.Direction.DESC, "requestDate"));
+        String cleanStatus = null;
+        if (status != null && !status.isBlank()) {
+            String upper = status.trim().toUpperCase();
+            if (!BorrowRequest.VALID_STATUSES.contains(upper)) {
+                throw new IllegalArgumentException("Trạng thái phiếu mượn không hợp lệ: " + status);
+            }
+            cleanStatus = upper;
         }
-        String target = status.trim().toUpperCase();
-        return all.stream()
-                .filter(r -> target.equalsIgnoreCase(r.getStatus()))
-                .toList();
+        String cleanKeyword = keyword != null ? keyword.trim() : null;
+        return borrowRequestRepository.searchBorrows(cleanStatus, cleanKeyword, pageable);
+    }
+
+    public List<BorrowRequest> findRecent() {
+        return borrowRequestRepository.findTop8ByOrderByRequestDateDesc();
+    }
+
+    public List<BorrowRequest> findByUser(Long userId, String status) {
+        if (status != null && !status.isBlank()) {
+            String upper = status.trim().toUpperCase();
+            if (!BorrowRequest.VALID_STATUSES.contains(upper)) {
+                throw new IllegalArgumentException("Trạng thái phiếu mượn không hợp lệ: " + status);
+            }
+            return borrowRequestRepository.findByUserIdOrderByRequestDateDesc(userId).stream()
+                    .filter(r -> upper.equalsIgnoreCase(r.getStatus()))
+                    .toList();
+        }
+        return borrowRequestRepository.findByUserIdOrderByRequestDateDesc(userId);
     }
 
     public BorrowRequest findById(Long id) {
@@ -112,6 +146,7 @@ public class BorrowService {
         return saved;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public BorrowRequest approveRequest(Long requestId, User admin, LocalDateTime dueDate, String note) {
         BorrowRequest request = findById(requestId);
@@ -120,8 +155,14 @@ public class BorrowService {
         }
 
         for (BorrowDetail detail : request.getDetails()) {
-            Book book = detail.getBook();
-            if (book.getAvailableQuantity() < detail.getQuantity()) {
+            Book book = bookRepository.findByIdWithPessimisticLock(detail.getBook().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sách #" + detail.getBook().getId()));
+            int activeLoans = borrowDetailRepository.countActiveLoansByBookId(book.getId());
+            int total = book.getTotalQuantity() != null ? book.getTotalQuantity() : 0;
+            int maxPossibleAvailable = Math.max(0, total - activeLoans);
+            if (book.getAvailableQuantity() <= 0
+                    || book.getAvailableQuantity() < detail.getQuantity()
+                    || maxPossibleAvailable < detail.getQuantity()) {
                 throw new IllegalStateException("Sách '" + book.getTitle() + "' không đủ tồn kho để duyệt");
             }
             book.setAvailableQuantity(book.getAvailableQuantity() - detail.getQuantity());
@@ -147,6 +188,7 @@ public class BorrowService {
         return saved;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public BorrowRequest rejectRequest(Long requestId, User admin, String note) {
         BorrowRequest request = findById(requestId);
@@ -171,6 +213,7 @@ public class BorrowService {
         return saved;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public BorrowRequest confirmReturn(Long requestId, User admin, String note) {
         BorrowRequest request = findById(requestId);
@@ -206,7 +249,7 @@ public class BorrowService {
     public BorrowRequest cancelByReader(Long requestId, Long readerId) {
         BorrowRequest request = findById(requestId);
         if (!request.getUser().getId().equals(readerId)) {
-            throw new IllegalStateException("Bạn không có quyền hủy phiếu mượn này");
+            throw new AccessDeniedException("Bạn không có quyền hủy phiếu mượn này");
         }
         if (!BorrowRequest.STATUS_PENDING.equals(request.getStatus())) {
             throw new IllegalStateException("Chỉ có thể hủy phiếu khi đang ở trạng thái PENDING");

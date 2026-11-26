@@ -4,7 +4,9 @@ import com.librune.entity.Role;
 import com.librune.entity.User;
 import com.librune.repository.UserRepository;
 import com.librune.service.JwtService;
+import com.librune.service.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -20,6 +22,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -32,6 +36,9 @@ import java.util.List;
  */
 @Configuration
 public class SecurityConfig {
+
+    @Value("${cors.allowed-origins:http://localhost:8080}")
+    private List<String> corsAllowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -55,7 +62,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(corsAllowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -68,8 +75,10 @@ public class SecurityConfig {
     public SecurityFilterChain apiSecurityFilterChain(
             HttpSecurity http,
             JwtService jwtService,
-            UserDetailsService userDetailsService) throws Exception {
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+            UserDetailsService userDetailsService,
+            TokenBlacklistService tokenBlacklistService) throws Exception {
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(
+                jwtService, userDetailsService, tokenBlacklistService);
 
         http
                 .securityMatcher("/api/**")
@@ -95,7 +104,16 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
+        CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName(null);
+
         http
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(tokenRepository)
+                        .csrfTokenRequestHandler(requestHandler)
+                        .ignoringRequestMatchers("/api/**")
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
                         .requestMatchers("/admin/**").hasAuthority(Role.ADMIN)

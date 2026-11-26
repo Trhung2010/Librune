@@ -2,6 +2,7 @@ package com.librune.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * Represents a book category.
@@ -15,6 +16,7 @@ public class Category {
     private Long id;
 
     @NotBlank
+    @Size(max = 100)
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 

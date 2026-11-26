@@ -1,5 +1,6 @@
 package com.librune.controller.web;
 
+import com.librune.entity.Book;
 import com.librune.service.BookService;
 import com.librune.service.CategoryService;
 import com.librune.service.UserService;
@@ -7,6 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Controller
 public class HomeController {
@@ -27,10 +30,14 @@ public class HomeController {
             @RequestParam(required = false) Long categoryId,
             Model model) {
         boolean hasFilter = (keyword != null && !keyword.isBlank()) || categoryId != null;
-        model.addAttribute("featuredBooks", bookService.findFeatured());
-        model.addAttribute("books", hasFilter
+        List<Book> displayBooks = hasFilter
                 ? bookService.search(keyword, categoryId, false)
-                : bookService.findNewest());
+                : bookService.findNewest();
+
+        model.addAttribute("featuredBooks", bookService.findFeatured());
+        model.addAttribute("books", displayBooks);
+        model.addAttribute("newestBooks", displayBooks);
+        model.addAttribute("hasFilter", hasFilter);
         model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryId);

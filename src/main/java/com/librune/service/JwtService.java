@@ -3,6 +3,7 @@ package com.librune.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.librune.entity.User;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,17 +23,39 @@ import java.util.Map;
 public class JwtService {
 
     private static final String HMAC_ALG = "HmacSHA256";
+    private static final long MAX_EXPIRATION_SECONDS = 86400L;
+    private final String secret;
     private final byte[] secretBytes;
     private final long expirationSeconds;
     private final ObjectMapper objectMapper;
 
     public JwtService(
-            @Value("${app.jwt.secret:LibruneDefaultSecretKeyForJwtSigningChangeInProd2026!}") String secret,
-            @Value("${app.jwt.expiration-seconds:604800}") long expirationSeconds,
+            @Value("${app.jwt.secret:${JWT_SECRET:}}") String secret,
+            @Value("${app.jwt.expiration-seconds:86400}") long expirationSeconds,
             ObjectMapper objectMapper) {
-        this.secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        this.secret = secret;
+        this.secretBytes = secret != null ? secret.getBytes(StandardCharsets.UTF_8) : new byte[0];
         this.expirationSeconds = expirationSeconds;
         this.objectMapper = objectMapper;
+    }
+
+    @PostConstruct
+    public void validateConfig() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                "JWT secret (app.jwt.secret / JWT_SECRET) must not be blank. " +
+                "Set the JWT_SECRET environment variable to a string of at least 32 characters.");
+        }
+        if (secret.length() < 32) {
+            throw new IllegalStateException(
+                "JWT secret is too short (" + secret.length() + " chars). " +
+                "It must be at least 32 characters long to meet minimum security requirements.");
+        }
+        if (expirationSeconds <= 0 || expirationSeconds > MAX_EXPIRATION_SECONDS) {
+            throw new IllegalStateException(
+                "JWT expirationSeconds (" + expirationSeconds + ") must be between 1 and " +
+                MAX_EXPIRATION_SECONDS + " seconds (1 day).");
+        }
     }
 
     public String generateToken(User user) {
@@ -57,6 +80,24 @@ public class JwtService {
     }
 
     public String extractUsernameIfValid(String token) {
+        Map<String, Object> claims = parseValidClaims(token);
+        if (claims == null) {
+            return null;
+        }
+        Object sub = claims.get("sub");
+        return sub != null ? sub.toString() : null;
+    }
+
+    public Instant extractExpirationIfValid(String token) {
+        Map<String, Object> claims = parseValidClaims(token);
+        if (claims == null) {
+            return null;
+        }
+        Object expObj = claims.get("exp");
+        return expObj instanceof Number expNum ? Instant.ofEpochSecond(expNum.longValue()) : null;
+    }
+
+    private Map<String, Object> parseValidClaims(String token) {
         if (token == null || token.isBlank()) {
             return null;
         }
@@ -81,8 +122,7 @@ public class JwtService {
             if (Instant.now().getEpochSecond() > expNum.longValue()) {
                 return null;
             }
-            Object sub = claims.get("sub");
-            return sub != null ? sub.toString() : null;
+            return claims;
         } catch (Exception ex) {
             return null;
         }

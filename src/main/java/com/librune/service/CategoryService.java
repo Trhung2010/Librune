@@ -3,6 +3,9 @@ package com.librune.service;
 import com.librune.entity.Category;
 import com.librune.repository.BookRepository;
 import com.librune.repository.CategoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,12 @@ public class CategoryService {
         return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
+    public Page<Category> searchPage(String keyword, int page, int size) {
+        Pageable pageable = PaginationSupport.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        String cleanKeyword = keyword != null ? keyword.trim() : null;
+        return categoryRepository.searchPage(cleanKeyword, pageable);
+    }
+
     public Category findById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy danh mục #" + id));
@@ -36,7 +45,10 @@ public class CategoryService {
         }
         String trimmedName = category.getName().trim();
         category.setName(trimmedName);
-        if (category.getId() == null && categoryRepository.existsByNameIgnoreCase(trimmedName)) {
+        boolean duplicate = category.getId() == null
+                ? categoryRepository.existsByNameIgnoreCase(trimmedName)
+                : categoryRepository.existsByNameIgnoreCaseAndIdNot(trimmedName, category.getId());
+        if (duplicate) {
             throw new IllegalArgumentException("Danh mục '" + trimmedName + "' đã tồn tại");
         }
         return categoryRepository.save(category);

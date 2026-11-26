@@ -1,6 +1,7 @@
 package com.librune.controller.web;
 
 import com.librune.entity.BorrowRequest;
+import com.librune.service.AuthorService;
 import com.librune.service.BookService;
 import com.librune.service.BorrowService;
 import com.librune.service.CategoryService;
@@ -16,16 +17,19 @@ public class AdminDashboardController {
 
     private final BookService bookService;
     private final CategoryService categoryService;
+    private final AuthorService authorService;
     private final UserService userService;
     private final BorrowService borrowService;
 
     public AdminDashboardController(
             BookService bookService,
             CategoryService categoryService,
+            AuthorService authorService,
             UserService userService,
             BorrowService borrowService) {
         this.bookService = bookService;
         this.categoryService = categoryService;
+        this.authorService = authorService;
         this.userService = userService;
         this.borrowService = borrowService;
     }
@@ -36,12 +40,17 @@ public class AdminDashboardController {
         model.addAttribute("totalBooks", bookService.countBooks());
         model.addAttribute("availableCopies", bookService.countAvailableCopies());
         model.addAttribute("totalCategories", categoryService.findAll().size());
+        model.addAttribute("totalAuthors", authorService.findAll().size());
         model.addAttribute("totalReaders", userService.countReaders());
         model.addAttribute("totalBorrowRequests", borrowService.countAll());
         model.addAttribute("pendingCount", borrowService.countByStatus(BorrowRequest.STATUS_PENDING));
         model.addAttribute("approvedCount", borrowService.countByStatus(BorrowRequest.STATUS_APPROVED));
         model.addAttribute("returnedCount", borrowService.countByStatus(BorrowRequest.STATUS_RETURNED));
+        model.addAttribute("rejectedCount", borrowService.countByStatus(BorrowRequest.STATUS_REJECTED));
+        model.addAttribute("cancelledCount", borrowService.countByStatus(BorrowRequest.STATUS_CANCELLED));
         model.addAttribute("pendingRequests", borrowService.findAll(BorrowRequest.STATUS_PENDING));
+        model.addAttribute("recentRequests", borrowService.findRecent());
+        model.addAttribute("lowStockBooks", bookService.findLowStock(3));
         return "admin/dashboard";
     }
 }

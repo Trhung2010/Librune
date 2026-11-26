@@ -2,6 +2,9 @@ package com.librune.service;
 
 import com.librune.entity.Author;
 import com.librune.repository.AuthorRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,12 @@ public class AuthorService {
             return findAll();
         }
         return authorRepository.findByNameContainingIgnoreCaseOrderByNameAsc(keyword.trim());
+    }
+
+    public Page<Author> searchPage(String keyword, int page, int size) {
+        Pageable pageable = PaginationSupport.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        String cleanKeyword = keyword != null ? keyword.trim() : null;
+        return authorRepository.searchPage(cleanKeyword, pageable);
     }
 
     public Author findById(Long id) {

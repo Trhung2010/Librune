@@ -96,3 +96,10 @@ CREATE TABLE IF NOT EXISTS notifications (
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_request FOREIGN KEY (borrow_request_id) REFERENCES borrow_requests(id) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS token_blacklist (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

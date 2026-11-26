@@ -1,138 +1,158 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('Trang chính Thư viện')}"></head>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librune – Thư viện</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/librune.css}">
+</head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1e3a5f;">
+
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:#0f172a;">
     <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/}">
-            <i class="bi bi-book-half me-2"></i>LIBRUNE
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/}">
+            <i class="bi bi-book-half text-primary"></i>
+            <span>LIBRUNE</span>
         </a>
-        <div class="d-flex align-items-center gap-2">
-            <a sec:authorize="hasAuthority('ROLE_ADMIN')" class="btn btn-light btn-sm fw-semibold" th:href="@{/admin/dashboard}">
-                <i class="bi bi-speedometer2 me-1"></i>Trang quản trị
-            </a>
-            <a sec:authorize="!isAuthenticated()" class="btn btn-outline-light btn-sm" th:href="@{/login}">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập Thủ thư
+        <div class="ms-auto">
+            <a th:href="@{/admin/dashboard}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-shield-lock me-1"></i>Quản trị
             </a>
         </div>
     </div>
 </nav>
 
-<main class="container py-4">
-    <section class="hero-banner mb-4">
-        <div class="row align-items-center">
+<div class="container my-5">
+    <!-- Hero -->
+    <div class="hero-banner mb-4">
+        <div class="row align-items-center g-4">
             <div class="col-lg-8">
-                <h1 class="fw-bold mb-2">Hệ thống Quản lý Thư viện Librune</h1>
-                <p class="mb-3 opacity-90">
-                    Nền tảng tra cứu và mượn trả sách đồng bộ giữa Trang quản trị Web và Ứng dụng Android.
-                </p>
-                <div class="d-flex flex-wrap gap-3 small">
-                    <span class="badge bg-light text-dark px-3 py-2">
-                        <i class="bi bi-journal-bookmark me-1"></i>
-                        <span th:text="${totalBooks}">0</span> đầu sách
-                    </span>
-                    <span class="badge bg-light text-dark px-3 py-2">
-                        <i class="bi bi-check2-circle me-1"></i>
-                        <span th:text="${availableCopies}">0</span> bản sẵn sàng
-                    </span>
-                    <span class="badge bg-light text-dark px-3 py-2">
-                        <i class="bi bi-people me-1"></i>
-                        <span th:text="${totalReaders}">0</span> độc giả
-                    </span>
+                <h1 class="fw-bold mb-2"><i class="bi bi-book-half me-2"></i>Thư viện Librune</h1>
+                <p class="lead mb-4 opacity-90">Hệ thống quản lý thư viện hiện đại – tra cứu đầu sách, theo dõi tồn kho và mượn trả nhanh chóng.</p>
+                <a th:href="@{/admin/dashboard}" class="btn btn-light fw-semibold px-4">
+                    <i class="bi bi-speedometer2 me-1"></i>Vào trang quản trị
+                </a>
+            </div>
+            <div class="col-lg-4">
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10">
+                            <div class="fs-4 fw-bold" th:text="${totalBooks}">0</div>
+                            <div class="small opacity-75">Đầu sách</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10">
+                            <div class="fs-4 fw-bold" th:text="${availableCopies}">0</div>
+                            <div class="small opacity-75">Bản có sẵn</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10">
+                            <div class="fs-4 fw-bold" th:text="${totalReaders}">0</div>
+                            <div class="small opacity-75">Độc giả</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section class="card border-0 shadow-sm mb-4">
+    <!-- Search Bar -->
+    <div class="card-modern mb-5">
         <div class="card-body">
             <form class="row g-2 align-items-center" th:action="@{/}" method="get">
                 <div class="col-md-6">
-                    <input type="text" class="form-control" name="keyword" th:value="${keyword}"
-                           placeholder="Tìm kiếm tên sách, ISBN hoặc tác giả...">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                               placeholder="Tìm theo tên sách, ISBN, tác giả...">
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <select class="form-select" name="categoryId">
-                        <option value="">-- Tất cả danh mục --</option>
-                        <option th:each="cat : ${categories}"
-                                th:value="${cat.id}"
-                                th:text="${cat.name}"
-                                th:selected="${categoryId != null and categoryId == cat.id}"></option>
+                        <option value="" th:selected="${categoryId == null}">-- Tất cả danh mục --</option>
+                        <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                th:selected="${categoryId != null and categoryId == c.id}"></option>
                     </select>
                 </div>
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search me-1"></i>Tra cứu
-                    </button>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Tìm</button>
+                    <a th:if="${hasFilter}" th:href="@{/}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
                 </div>
             </form>
         </div>
-    </section>
+    </div>
 
-    <section th:if="${!#lists.isEmpty(featuredBooks) and (keyword == null or keyword.isBlank()) and categoryId == null}" class="mb-5">
+    <!-- Featured -->
+    <div class="mb-5" th:if="${!hasFilter}">
         <h4 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Sách nổi bật</h4>
         <div class="row g-3">
-            <div class="col-md-4 col-lg-3" th:each="book : ${featuredBooks}">
-                <div class="card h-100 border-0 shadow-sm">
+            <div th:if="${#lists.isEmpty(featuredBooks)}" class="col-12 text-muted">Chưa có sách nổi bật.</div>
+            <div th:each="book : ${featuredBooks}" class="col-6 col-md-3 col-lg-2">
+                <div class="card-modern h-100 overflow-hidden">
                     <img th:if="${book.coverImage != null and !book.coverImage.isBlank()}"
-                         th:src="${book.coverImage}" class="card-img-top book-card-cover" th:alt="${book.title}">
+                         th:src="${book.coverImage}" class="card-img-top book-card-cover" alt="cover">
                     <div th:if="${book.coverImage == null or book.coverImage.isBlank()}"
-                         class="card-img-top book-card-cover d-flex align-items-center justify-content-center text-muted">
+                         class="book-card-cover d-flex align-items-center justify-content-center bg-light text-muted">
                         <i class="bi bi-book fs-1"></i>
                     </div>
-                    <div class="card-body d-flex flex-column">
-                        <span class="badge bg-primary-subtle text-primary align-self-start mb-2"
-                              th:text="${book.category.name}">Danh mục</span>
-                        <h6 class="card-title fw-bold mb-1" th:text="${book.title}">Tên sách</h6>
-                        <p class="text-muted small mb-2">
-                            <span th:each="a, iter : ${book.authors}"
-                                  th:text="${a.name + (!iter.last ? ', ' : '')}"></span>
-                        </p>
-                        <div class="mt-auto d-flex justify-content-between align-items-center small">
-                            <span th:classappend="${book.availableQuantity > 0} ? 'text-success fw-semibold' : 'text-danger fw-semibold'"
-                                  th:text="${book.availableQuantity > 0 ? 'Còn ' + book.availableQuantity + ' cuốn' : 'Hết sách'}"></span>
+                    <div class="card-body p-2">
+                        <div class="fw-semibold small" style="line-height:1.3;" th:text="${book.title}"></div>
+                        <div class="text-muted" style="font-size:0.75rem;"
+                             th:text="${book.category != null ? book.category.name : ''}"></div>
+                        <div class="mt-1">
+                            <span th:if="${book.availableQuantity > 0}" class="badge-soft badge-soft-success" style="font-size:0.65rem;">Còn sách</span>
+                            <span th:unless="${book.availableQuantity > 0}" class="badge-soft badge-soft-secondary" style="font-size:0.65rem;">Hết sách</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section>
-        <h4 class="fw-bold mb-3" th:text="${(keyword != null and !keyword.isBlank()) or categoryId != null ? 'Kết quả tra cứu' : 'Sách mới cập nhật'}">
-            Danh sách sách
+    <!-- Newest / Search Results -->
+    <div>
+        <h4 class="fw-bold mb-3">
+            <i class="bi bi-clock-history me-2 text-primary"></i>
+            <span th:text="${hasFilter ? 'Kết quả tìm kiếm' : 'Sách mới nhất'}">Sách mới nhất</span>
         </h4>
-        <div th:if="${#lists.isEmpty(books)}" class="alert alert-info">
-            Không tìm thấy cuốn sách phù hợp.
-        </div>
-        <div class="row g-3" th:if="${!#lists.isEmpty(books)}">
-            <div class="col-md-4 col-lg-3" th:each="book : ${books}">
-                <div class="card h-100 border-0 shadow-sm">
-                    <img th:if="${book.coverImage != null and !book.coverImage.isBlank()}"
-                         th:src="${book.coverImage}" class="card-img-top book-card-cover" th:alt="${book.title}">
-                    <div th:if="${book.coverImage == null or book.coverImage.isBlank()}"
-                         class="card-img-top book-card-cover d-flex align-items-center justify-content-center text-muted">
-                        <i class="bi bi-book fs-1"></i>
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <span class="badge bg-secondary-subtle text-dark align-self-start mb-2"
-                              th:text="${book.category.name}">Danh mục</span>
-                        <h6 class="card-title fw-bold mb-1" th:text="${book.title}">Tên sách</h6>
-                        <p class="text-muted small mb-2">
-                            <span th:each="a, iter : ${book.authors}"
-                                  th:text="${a.name + (!iter.last ? ', ' : '')}"></span>
-                        </p>
-                        <div class="mt-auto small">
-                            <span th:classappend="${book.availableQuantity > 0} ? 'text-success fw-semibold' : 'text-danger fw-semibold'"
-                                  th:text="${'Còn ' + book.availableQuantity + ' / ' + book.totalQuantity + ' cuốn'}"></span>
+        <div class="row g-3">
+            <div th:if="${#lists.isEmpty(newestBooks)}" class="col-12 text-muted">Không tìm thấy sách phù hợp.</div>
+            <div th:each="book : ${newestBooks}" class="col-12 col-md-6">
+                <div class="card-modern">
+                    <div class="card-body d-flex gap-3 align-items-start py-3">
+                        <img th:if="${book.coverImage != null and !book.coverImage.isBlank()}"
+                             th:src="${book.coverImage}" class="book-cover-thumb flex-shrink-0" alt="cover">
+                        <div th:if="${book.coverImage == null or book.coverImage.isBlank()}"
+                             class="book-cover-thumb flex-shrink-0 d-flex align-items-center justify-content-center bg-light text-muted">
+                            <i class="bi bi-book"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold" th:text="${book.title}"></div>
+                            <div class="text-muted small">
+                                <span th:each="a, iter : ${book.authors}"
+                                      th:text="${a.name + (!iter.last ? ', ' : '')}"></span>
+                            </div>
+                            <div class="small text-secondary mb-1" th:text="${book.category != null ? book.category.name : ''}"></div>
+                            <span th:if="${book.availableQuantity > 0}" class="badge-soft badge-soft-success" style="font-size:0.7rem;"
+                                  th:text="${'Còn ' + book.availableQuantity + ' cuốn'}"></span>
+                            <span th:unless="${book.availableQuantity > 0}" class="badge-soft badge-soft-secondary" style="font-size:0.7rem;">Hết sách</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-</main>
+    </div>
+</div>
 
-<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<footer class="mt-5 py-4 text-center text-muted small border-top bg-white">
+    &copy; 2026 Librune – Hệ thống quản lý thư viện
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

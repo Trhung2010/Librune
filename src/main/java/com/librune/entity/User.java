@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
@@ -25,25 +26,31 @@ public class User {
     private Role role;
 
     @NotBlank
+    @Size(max = 50)
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
     @NotBlank
+    @Size(min = 8, max = 255)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false, length = 255)
     private String password;
 
     @NotBlank
+    @Size(max = 100)
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
     @Email
+    @Size(max = 100)
     @Column(unique = true, length = 100)
     private String email;
 
-    @Column(length = 20)
+    @Size(max = 100)
+    @Column(length = 100)
     private String phone;
 
+    @Size(max = 100)
     @Column(length = 255)
     private String address;
 

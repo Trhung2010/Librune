@@ -4,14 +4,24 @@ import com.librune.entity.Role;
 import com.librune.entity.User;
 import com.librune.repository.RoleRepository;
 import com.librune.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService {
+
+    private static final String DUMMY_BCRYPT_HASH = "$2a$10$w0uK/b4b5E4hWJ6g5s3FheD6qF9KkWlRjCq9eQz5Mh9p.g4O8fF7C";
+    private static final Set<String> ALLOWED_STATUSES = Set.of(User.STATUS_ACTIVE, User.STATUS_LOCKED);
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -31,11 +41,20 @@ public class UserService {
         if (input.getUsername() == null || input.getUsername().isBlank()) {
             throw new IllegalArgumentException("Tên đăng nhập không được để trống");
         }
-        if (input.getPassword() == null || input.getPassword().length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu phải từ 6 ký tự trở lên");
+        if (input.getPassword() == null || input.getPassword().length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu phải từ 8 ký tự trở lên");
         }
         if (input.getFullName() == null || input.getFullName().isBlank()) {
             throw new IllegalArgumentException("Họ tên không được để trống");
+        }
+        if (input.getFullName().trim().length() > 100) {
+            throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự");
+        }
+        if (input.getPhone() != null && input.getPhone().trim().length() > 100) {
+            throw new IllegalArgumentException("Số điện thoại không được vượt quá 100 ký tự");
+        }
+        if (input.getAddress() != null && input.getAddress().trim().length() > 100) {
+            throw new IllegalArgumentException("Địa chỉ không được vượt quá 100 ký tự");
         }
 
         String username = input.getUsername().trim();
@@ -66,13 +85,18 @@ public class UserService {
         if (username == null || rawPassword == null) {
             throw new IllegalArgumentException("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
         }
-        User user = userRepository.findByUsername(username.trim())
-                .orElseThrow(() -> new IllegalArgumentException("Sai tên đăng nhập hoặc mật khẩu"));
+        Optional<User> userOpt = userRepository.findByUsername(username.trim());
+        if (userOpt.isEmpty()) {
+            passwordEncoder.matches(rawPassword, DUMMY_BCRYPT_HASH);
+            throw new IllegalArgumentException("Sai tên đăng nhập hoặc mật khẩu");
+        }
+        User user = userOpt.get();
+        boolean passwordMatches = passwordEncoder.matches(rawPassword, user.getPassword());
+        if (!passwordMatches) {
+            throw new IllegalArgumentException("Sai tên đăng nhập hoặc mật khẩu");
+        }
         if (!User.STATUS_ACTIVE.equalsIgnoreCase(user.getStatus())) {
             throw new IllegalStateException("Tài khoản đã bị khóa");
-        }
-        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Sai tên đăng nhập hoặc mật khẩu");
         }
         return user;
     }
@@ -87,8 +111,24 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng #" + id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<User> findAllReaders() {
         return userRepository.findByRoleNameOrderByCreatedAtDesc(Role.READER);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public Page<User> searchReaders(String keyword, String status, int page, int size) {
+        Pageable pageable = PaginationSupport.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        String cleanKeyword = keyword != null ? keyword.trim() : null;
+        String cleanStatus = null;
+        if (status != null && !status.isBlank()) {
+            String upper = status.trim().toUpperCase();
+            if (!ALLOWED_STATUSES.contains(upper)) {
+                throw new IllegalArgumentException("Trạng thái người dùng không hợp lệ: " + status);
+            }
+            cleanStatus = upper;
+        }
+        return userRepository.searchByRole(Role.READER, cleanKeyword, cleanStatus, pageable);
     }
 
     public long countReaders() {
@@ -99,6 +139,9 @@ public class UserService {
     public User updateProfile(String username, User updates) {
         User user = findByUsername(username);
         if (updates.getFullName() != null && !updates.getFullName().isBlank()) {
+            if (updates.getFullName().trim().length() > 100) {
+                throw new IllegalArgumentException("Họ tên không được vượt quá 100 ký tự");
+            }
             user.setFullName(updates.getFullName().trim());
         }
         if (updates.getEmail() != null && !updates.getEmail().isBlank()) {
@@ -109,9 +152,15 @@ public class UserService {
             user.setEmail(newEmail);
         }
         if (updates.getPhone() != null) {
+            if (updates.getPhone().trim().length() > 100) {
+                throw new IllegalArgumentException("Số điện thoại không được vượt quá 100 ký tự");
+            }
             user.setPhone(updates.getPhone().trim());
         }
         if (updates.getAddress() != null) {
+            if (updates.getAddress().trim().length() > 100) {
+                throw new IllegalArgumentException("Địa chỉ không được vượt quá 100 ký tự");
+            }
             user.setAddress(updates.getAddress().trim());
         }
         return userRepository.save(user);
@@ -123,13 +172,14 @@ public class UserService {
         if (oldPassword == null || !passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
         }
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu mới phải từ 6 ký tự trở lên");
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu mới phải từ 8 ký tự trở lên");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public User toggleStatus(Long userId) {
         User user = findById(userId);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head th:replace="~{fragments/layout :: head('Quản lý Danh mục')}"></head>
 <body>
 <div class="admin-wrapper">
@@ -9,40 +9,70 @@
         <div class="admin-content">
             <div th:replace="~{fragments/layout :: alerts}"></div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <a th:href="@{/admin/categories/new}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-1"></i>Thêm danh mục
-                </a>
+            <div class="card-modern mb-4">
+                <div class="card-body">
+                    <form class="row g-2 align-items-center" th:action="@{/admin/categories}" method="get">
+                        <div class="col-md-7">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                                       placeholder="Tìm tên danh mục...">
+                            </div>
+                        </div>
+                        <div class="col-md-5 d-flex flex-wrap gap-2 justify-content-md-end">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-funnel me-1"></i>Lọc
+                            </button>
+                            <a th:if="${keyword != null and !keyword.isBlank()}" th:href="@{/admin/categories}"
+                               class="btn btn-outline-secondary" title="Xóa tìm kiếm">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                            <a th:href="@{/admin/categories/new}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>Thêm danh mục
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div class="card border-0 shadow-sm">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên danh mục</th>
-                        <th>Mô tả</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:if="${#lists.isEmpty(categories)}">
-                        <td colspan="4" class="text-center py-4 text-muted">Chưa có danh mục nào.</td>
-                    </tr>
-                    <tr th:each="c : ${categories}">
-                        <td th:text="${c.id}"></td>
-                        <td class="fw-semibold" th:text="${c.name}"></td>
-                        <td th:text="${c.description}"></td>
-                        <td class="text-end">
-                            <a th:href="@{'/admin/categories/' + ${c.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">Sửa</a>
-                            <form th:action="@{'/admin/categories/' + ${c.id} + '/delete'}" method="post" class="d-inline"
-                                  onsubmit="return confirm('Xác nhận xóa danh mục này?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-                            </form>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="card-modern">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(categories)}">
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-tags fs-2 d-block mb-2 opacity-50"></i>
+                                Không có danh mục nào.
+                            </td>
+                        </tr>
+                        <tr th:each="c : ${categories}">
+                            <td class="text-muted fw-medium" th:text="${'#' + c.id}"></td>
+                            <td class="fw-semibold" th:text="${c.name}"></td>
+                            <td class="small text-muted" th:text="${c.description != null and !c.description.isBlank() ? c.description : '-'}"></td>
+                            <td class="text-end text-nowrap">
+                                <a th:href="@{'/admin/categories/' + ${c.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil me-1"></i>Sửa
+                                </a>
+                                <form th:action="@{'/admin/categories/' + ${c.id} + '/delete'}" method="post" class="d-inline"
+                                      th:attr="data-confirm=${'Xác nhận xóa danh mục &quot;' + c.name + '&quot;?'}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash me-1"></i>Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:replace="~{fragments/layout :: pagination(${categoryPage}, '/admin/categories')}"></div>
             </div>
         </div>
     </div>

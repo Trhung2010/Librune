@@ -1,38 +1,60 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Đăng nhập Quản trị')}"></head>
-<body class="d-flex align-items-center justify-content-center min-vh-100">
-<div class="card shadow-sm border-0" style="width: 100%; max-width: 400px;">
-    <div class="card-body p-4">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | Librune</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/librune.css}">
+</head>
+<body class="login-bg d-flex align-items-center justify-content-center min-vh-100 p-3">
+<div class="card login-card bg-white">
+    <div class="card-body p-4 p-sm-5">
         <div class="text-center mb-4">
-            <i class="bi bi-book-half fs-1 text-primary"></i>
-            <h4 class="fw-bold mt-2 mb-1">Librune Admin</h4>
-            <p class="text-muted small mb-0">Đăng nhập hệ thống quản lý thư viện</p>
+            <div class="brand-icon mx-auto mb-3" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#3b82f6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;box-shadow:0 8px 20px rgba(79,70,229,.3);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            <h4 class="fw-bold mb-1">LIBRUNE ADMIN</h4>
+            <p class="text-muted small mb-0">Đăng nhập hệ thống Quản lý Thư viện</p>
         </div>
 
-        <div th:if="${param.error}" class="alert alert-danger py-2 small">
-            Sai tên đăng nhập, mật khẩu hoặc tài khoản không có quyền quản trị.
+        <div th:if="${param.error}" class="alert alert-danger py-2 small d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>Tên đăng nhập hoặc mật khẩu không đúng.</span>
         </div>
-        <div th:if="${param.logout}" class="alert alert-info py-2 small">
-            Bạn đã đăng xuất thành công.
+        <div th:if="${param.logout}" class="alert alert-info py-2 small d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Bạn đã đăng xuất thành công.</span>
         </div>
 
-        <form th:action="@{/login}" method="post">
+        <form th:action="@{/login}" method="post" class="needs-validation" novalidate>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Tên đăng nhập</label>
-                <input type="text" name="username" class="form-control" required autofocus placeholder="admin">
+                <label class="form-label fw-semibold" for="loginUsername">Tên đăng nhập</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted"><i class="bi bi-person"></i></span>
+                    <input id="loginUsername" type="text" name="username" class="form-control" required autofocus placeholder="admin">
+                    <div class="invalid-feedback">Vui lòng nhập tên đăng nhập.</div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required placeholder="••••••">
+            <div class="mb-4">
+                <label class="form-label fw-semibold" for="loginPassword">Mật khẩu</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted"><i class="bi bi-lock"></i></span>
+                    <input id="loginPassword" type="password" name="password" class="form-control" required placeholder="••••••">
+                    <div class="invalid-feedback">Vui lòng nhập mật khẩu.</div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 fw-semibold">Đăng nhập</button>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+            </button>
         </form>
-        <div class="text-center mt-3">
-            <a th:href="@{/}" class="text-decoration-none small">← Quay về Trang chính</a>
+        <div class="text-center mt-4">
+            <a th:href="@{/}" class="small text-muted text-decoration-none">← Quay về trang thư viện công khai</a>
         </div>
     </div>
 </div>
-<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/librune-admin.js}"></script>
 </body>
 </html>

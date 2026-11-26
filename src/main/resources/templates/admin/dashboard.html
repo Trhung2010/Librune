@@ -1,81 +1,282 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Thống kê')}"></head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head th:replace="~{fragments/layout :: head('Bảng điều khiển')}"></head>
 <body>
 <div class="admin-wrapper">
     <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
     <div class="admin-main">
-        <header th:replace="~{fragments/layout :: topbar('Thống kê Tổng quan')}"></header>
+        <header th:replace="~{fragments/layout :: topbar('Bảng điều khiển')}"></header>
         <div class="admin-content">
             <div th:replace="~{fragments/layout :: alerts}"></div>
 
+            <!-- KPI Cards -->
             <div class="row g-3 mb-4">
-                <div class="col-md-3">
+                <div class="col-sm-6 col-xl-3">
                     <div class="stat-card">
-                        <div class="text-muted small">Tổng đầu sách</div>
-                        <div class="stat-value" th:text="${totalBooks}">0</div>
-                        <div class="small text-secondary" th:text="${availableCopies + ' bản có sẵn'}"></div>
+                        <div>
+                            <div class="stat-label">Tổng đầu sách</div>
+                            <div class="stat-value" th:text="${totalBooks}">0</div>
+                            <div class="stat-meta" th:text="${availableCopies + ' bản đang có sẵn'}">0 bản đang có sẵn</div>
+                        </div>
+                        <div class="stat-icon stat-icon-indigo">
+                            <i class="bi bi-journal-bookmark-fill"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-sm-6 col-xl-3">
                     <div class="stat-card">
-                        <div class="text-muted small">Độc giả đăng ký</div>
-                        <div class="stat-value" th:text="${totalReaders}">0</div>
-                        <div class="small text-secondary" th:text="${totalCategories + ' danh mục sách'}"></div>
+                        <div>
+                            <div class="stat-label">Độc giả đăng ký</div>
+                            <div class="stat-value" th:text="${totalReaders}">0</div>
+                            <div class="stat-meta" th:text="${totalCategories + ' danh mục • ' + (totalAuthors != null ? totalAuthors : 0) + ' tác giả'}"></div>
+                        </div>
+                        <div class="stat-icon stat-icon-sky">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-sm-6 col-xl-3">
                     <div class="stat-card">
-                        <div class="text-muted small">Chờ duyệt mượn</div>
-                        <div class="stat-value text-warning" th:text="${pendingCount}">0</div>
-                        <div class="small text-secondary">Phiếu trạng thái PENDING</div>
+                        <div>
+                            <div class="stat-label">Chờ duyệt mượn</div>
+                            <div class="stat-value text-warning" th:text="${pendingCount}">0</div>
+                            <div class="stat-meta">Phiếu cần thủ thư xử lý</div>
+                        </div>
+                        <div class="stat-icon stat-icon-amber">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-sm-6 col-xl-3">
                     <div class="stat-card">
-                        <div class="text-muted small">Đang mượn / Đã trả</div>
-                        <div class="stat-value text-success" th:text="${approvedCount + ' / ' + returnedCount}">0 / 0</div>
-                        <div class="small text-secondary" th:text="${'Tổng ' + totalBorrowRequests + ' lượt yêu cầu'}"></div>
+                        <div>
+                            <div class="stat-label">Đang mượn / Đã trả</div>
+                            <div class="stat-value text-success" th:text="${approvedCount + ' / ' + returnedCount}">0 / 0</div>
+                            <div class="stat-meta" th:text="${'Tổng ' + totalBorrowRequests + ' phiếu mượn'}">Tổng 0 phiếu</div>
+                        </div>
+                        <div class="stat-icon stat-icon-emerald">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                    <h6 class="mb-0 fw-bold">Phiếu mượn đang chờ duyệt</h6>
-                    <a th:href="@{/admin/borrows}" class="btn btn-sm btn-outline-primary">Xem tất cả phiếu</a>
+            <!-- Quick Actions -->
+            <div class="card-modern p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-lightning-charge-fill text-primary fs-5"></i>
+                    <span class="fw-semibold">Thao tác nhanh</span>
                 </div>
-                <div class="card-body p-0">
-                    <div th:if="${#lists.isEmpty(pendingRequests)}" class="p-4 text-center text-muted">
-                        Hiện không có yêu cầu mượn sách nào đang chờ duyệt.
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/admin/books/new}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Thêm sách mới
+                    </a>
+                    <a th:href="@{/admin/categories/new}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-tag me-1"></i>Thêm danh mục
+                    </a>
+                    <a th:href="@{/admin/authors/new}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pen me-1"></i>Thêm tác giả
+                    </a>
+                    <a th:href="@{/admin/borrows(status='PENDING')}" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-check2-square me-1"></i>Duyệt phiếu chờ
+                    </a>
+                </div>
+            </div>
+
+            <!-- Charts & Low Stock Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="card-modern h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Thống kê trạng thái mượn sách</h6>
+                            <span class="badge-soft badge-soft-indigo" th:text="${'Tổng: ' + totalBorrowRequests}">Tổng: 0</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center g-3">
+                                <div class="col-sm-5">
+                                    <canvas id="borrowStatusChart" height="180"
+                                            th:attr="data-pending=${pendingCount},
+                                                     data-approved=${approvedCount},
+                                                     data-returned=${returnedCount},
+                                                     data-rejected=${rejectedCount != null ? rejectedCount : 0},
+                                                     data-cancelled=${cancelledCount != null ? cancelledCount : 0}"></canvas>
+                                </div>
+                                <div class="col-sm-7">
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="fw-semibold">Chờ duyệt (PENDING)</span>
+                                            <span th:text="${pendingCount}">0</span>
+                                        </div>
+                                        <div class="progress" style="height: 7px;">
+                                            <div class="progress-bar bg-warning" th:style="${'width:' + (totalBorrowRequests > 0 ? (pendingCount * 100 / totalBorrowRequests) : 0) + '%'}"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="fw-semibold">Đang mượn (APPROVED)</span>
+                                            <span th:text="${approvedCount}">0</span>
+                                        </div>
+                                        <div class="progress" style="height: 7px;">
+                                            <div class="progress-bar bg-info" th:style="${'width:' + (totalBorrowRequests > 0 ? (approvedCount * 100 / totalBorrowRequests) : 0) + '%'}"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="fw-semibold">Đã trả (RETURNED)</span>
+                                            <span th:text="${returnedCount}">0</span>
+                                        </div>
+                                        <div class="progress" style="height: 7px;">
+                                            <div class="progress-bar bg-success" th:style="${'width:' + (totalBorrowRequests > 0 ? (returnedCount * 100 / totalBorrowRequests) : 0) + '%'}"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="fw-semibold">Từ chối / Hủy</span>
+                                            <span th:text="${(rejectedCount != null ? rejectedCount : 0) + (cancelledCount != null ? cancelledCount : 0)}">0</span>
+                                        </div>
+                                        <div class="progress" style="height: 7px;">
+                                            <div class="progress-bar bg-danger" th:style="${'width:' + (totalBorrowRequests > 0 ? (((rejectedCount != null ? rejectedCount : 0) + (cancelledCount != null ? cancelledCount : 0)) * 100 / totalBorrowRequests) : 0) + '%'}"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <table th:if="${!#lists.isEmpty(pendingRequests)}" class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Mã phiếu</th>
-                            <th>Độc giả</th>
-                            <th>Số đầu sách</th>
-                            <th>Ngày gửi</th>
-                            <th class="text-end">Thao tác</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="req : ${pendingRequests}">
-                            <td class="fw-semibold" th:text="${'#' + req.id}">#1</td>
-                            <td th:text="${req.user.fullName + ' (' + req.user.username + ')'}"></td>
-                            <td th:text="${#lists.size(req.details)}"></td>
-                            <td th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
-                            <td class="text-end">
-                                <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-primary">Xử lý</a>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card-modern h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-exclamation-diamond-fill text-warning me-2"></i>Sách sắp hết bản sao</h6>
+                            <a th:href="@{/admin/books}" class="small text-decoration-none fw-semibold">Quản lý kho</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div th:if="${lowStockBooks == null or #lists.isEmpty(lowStockBooks)}" class="p-4 text-center text-muted small">
+                                Tất cả đầu sách đều còn tồn kho dồi dào.
+                            </div>
+                            <ul th:if="${lowStockBooks != null and !#lists.isEmpty(lowStockBooks)}" class="list-group list-group-flush">
+                                <li th:each="b : ${lowStockBooks}" class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
+                                    <div class="text-truncate me-2">
+                                        <a th:href="@{'/admin/books/' + ${b.id} + '/edit'}" class="fw-semibold text-decoration-none text-dark" th:text="${b.title}"></a>
+                                        <div class="small text-muted" th:text="${b.category != null ? b.category.name : ''}"></div>
+                                    </div>
+                                    <span class="badge-soft"
+                                          th:classappend="${b.availableQuantity == 0} ? 'badge-soft-danger' : 'badge-soft-warning'"
+                                          th:text="${b.availableQuantity + ' / ' + b.totalQuantity}"></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending & Recent Activity -->
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card-modern">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">Phiếu mượn đang chờ duyệt</h6>
+                            <a th:href="@{/admin/borrows(status='PENDING')}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                        </div>
+                        <div class="table-responsive">
+                            <div th:if="${#lists.isEmpty(pendingRequests)}" class="p-4 text-center text-muted">
+                                Hiện không có yêu cầu mượn sách nào đang chờ duyệt.
+                            </div>
+                            <table th:if="${!#lists.isEmpty(pendingRequests)}" class="table table-modern mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Độc giả</th>
+                                    <th>Số đầu sách</th>
+                                    <th>Ngày gửi</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="req : ${pendingRequests}">
+                                    <td class="fw-bold text-primary" th:text="${'#' + req.id}">#1</td>
+                                    <td>
+                                        <div class="fw-semibold" th:text="${req.user.fullName}"></div>
+                                        <div class="small text-muted" th:text="${'@' + req.user.username}"></div>
+                                    </td>
+                                    <td><span class="badge-soft badge-soft-indigo" th:text="${#lists.size(req.details) + ' đầu sách'}"></span></td>
+                                    <td class="small text-muted" th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                                    <td class="text-end">
+                                        <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-primary">Xử lý</a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card-modern">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">Hoạt động mượn / trả gần đây</h6>
+                            <a th:href="@{/admin/borrows}" class="small text-decoration-none fw-semibold">Tất cả phiếu</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div th:if="${recentRequests == null or #lists.isEmpty(recentRequests)}" class="p-4 text-center text-muted small">
+                                Chưa có hoạt động mượn sách nào.
+                            </div>
+                            <div th:if="${recentRequests != null and !#lists.isEmpty(recentRequests)}" class="list-group list-group-flush">
+                                <a th:each="req : ${recentRequests}" th:href="@{'/admin/borrows/' + ${req.id}}"
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-3 py-2">
+                                    <div>
+                                        <div class="fw-semibold small">
+                                            <span th:text="${'#' + req.id + ' • ' + req.user.fullName}"></span>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.75rem;"
+                                             th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></div>
+                                    </div>
+                                    <span class="badge-soft"
+                                          th:classappend="${req.status == 'PENDING' ? 'badge-soft-warning' :
+                                                           (req.status == 'APPROVED' ? 'badge-soft-info' :
+                                                           (req.status == 'RETURNED' ? 'badge-soft-success' : 'badge-soft-danger'))}"
+                                          th:text="${req.status}"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        const canvas = document.getElementById('borrowStatusChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+        const p = Number(canvas.dataset.pending || 0);
+        const a = Number(canvas.dataset.approved || 0);
+        const r = Number(canvas.dataset.returned || 0);
+        const j = Number(canvas.dataset.rejected || 0) + Number(canvas.dataset.cancelled || 0);
+        const total = p + a + r + j;
+        new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Chờ duyệt', 'Đang mượn', 'Đã trả', 'Từ chối / Hủy'],
+                datasets: [{
+                    data: total > 0 ? [p, a, r, j] : [1],
+                    backgroundColor: total > 0
+                        ? ['#f59e0b', '#0ea5e9', '#10b981', '#ef4444']
+                        : ['#e2e8f0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '68%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: total > 0 }
+                }
+            }
+        });
+    })();
+</script>
 </body>
 </html>
