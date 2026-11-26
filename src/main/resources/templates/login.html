@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đăng nhập Quản trị')}"></head>
+<body class="d-flex align-items-center justify-content-center min-vh-100">
+<div class="card shadow-sm border-0" style="width: 100%; max-width: 400px;">
+    <div class="card-body p-4">
+        <div class="text-center mb-4">
+            <i class="bi bi-book-half fs-1 text-primary"></i>
+            <h4 class="fw-bold mt-2 mb-1">Librune Admin</h4>
+            <p class="text-muted small mb-0">Đăng nhập hệ thống quản lý thư viện</p>
+        </div>
+
+        <div th:if="${param.error}" class="alert alert-danger py-2 small">
+            Sai tên đăng nhập, mật khẩu hoặc tài khoản không có quyền quản trị.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-info py-2 small">
+            Bạn đã đăng xuất thành công.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Tên đăng nhập</label>
+                <input type="text" name="username" class="form-control" required autofocus placeholder="admin">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Mật khẩu</label>
+                <input type="password" name="password" class="form-control" required placeholder="••••••">
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-semibold">Đăng nhập</button>
+        </form>
+        <div class="text-center mt-3">
+            <a th:href="@{/}" class="text-decoration-none small">← Quay về Trang chính</a>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

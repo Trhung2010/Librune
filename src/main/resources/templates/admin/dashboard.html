@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Thống kê')}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar('Thống kê Tổng quan')}"></header>
+        <div class="admin-content">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="text-muted small">Tổng đầu sách</div>
+                        <div class="stat-value" th:text="${totalBooks}">0</div>
+                        <div class="small text-secondary" th:text="${availableCopies + ' bản có sẵn'}"></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="text-muted small">Độc giả đăng ký</div>
+                        <div class="stat-value" th:text="${totalReaders}">0</div>
+                        <div class="small text-secondary" th:text="${totalCategories + ' danh mục sách'}"></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="text-muted small">Chờ duyệt mượn</div>
+                        <div class="stat-value text-warning" th:text="${pendingCount}">0</div>
+                        <div class="small text-secondary">Phiếu trạng thái PENDING</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="text-muted small">Đang mượn / Đã trả</div>
+                        <div class="stat-value text-success" th:text="${approvedCount + ' / ' + returnedCount}">0 / 0</div>
+                        <div class="small text-secondary" th:text="${'Tổng ' + totalBorrowRequests + ' lượt yêu cầu'}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0 fw-bold">Phiếu mượn đang chờ duyệt</h6>
+                    <a th:href="@{/admin/borrows}" class="btn btn-sm btn-outline-primary">Xem tất cả phiếu</a>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(pendingRequests)}" class="p-4 text-center text-muted">
+                        Hiện không có yêu cầu mượn sách nào đang chờ duyệt.
+                    </div>
+                    <table th:if="${!#lists.isEmpty(pendingRequests)}" class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Độc giả</th>
+                            <th>Số đầu sách</th>
+                            <th>Ngày gửi</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="req : ${pendingRequests}">
+                            <td class="fw-semibold" th:text="${'#' + req.id}">#1</td>
+                            <td th:text="${req.user.fullName + ' (' + req.user.username + ')'}"></td>
+                            <td th:text="${#lists.size(req.details)}"></td>
+                            <td th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                            <td class="text-end">
+                                <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-primary">Xử lý</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

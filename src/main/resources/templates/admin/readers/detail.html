@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Chi tiết Độc giả')}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar('Thông tin Độc giả')}"></header>
+        <div class="admin-content">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="fw-bold mb-1" th:text="${reader.fullName}"></h5>
+                            <p class="text-muted mb-2" th:text="${'@' + reader.username + ' • ' + (reader.email != null ? reader.email : 'Chưa có email')}"></p>
+                            <div class="small">
+                                <strong>SĐT:</strong> <span th:text="${reader.phone != null ? reader.phone : '-'}"></span> |
+                                <strong>Địa chỉ:</strong> <span th:text="${reader.address != null ? reader.address : '-'}"></span>
+                            </div>
+                        </div>
+                        <span class="badge fs-6"
+                              th:classappend="${reader.status == 'ACTIVE'} ? 'bg-success' : 'bg-danger'"
+                              th:text="${reader.status}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold py-3">Lịch sử mượn sách</div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(borrowHistory)}" class="p-4 text-center text-muted">
+                        Độc giả chưa có lượt mượn nào.
+                    </div>
+                    <table th:if="${!#lists.isEmpty(borrowHistory)}" class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Phiếu</th>
+                            <th>Ngày gửi</th>
+                            <th>Hạn trả</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Xem</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="req : ${borrowHistory}">
+                            <td class="fw-semibold" th:text="${'#' + req.id}"></td>
+                            <td th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                            <td th:text="${req.dueDate != null ? #temporals.format(req.dueDate, 'dd/MM/yyyy') : '-'}"></td>
+                            <td><span class="badge bg-secondary" th:text="${req.status}"></span></td>
+                            <td class="text-end">
+                                <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a th:href="@{/admin/readers}" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

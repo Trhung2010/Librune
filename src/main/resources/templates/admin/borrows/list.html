@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý Mượn / Trả sách')}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar('Quản lý Mượn & Trả sách')}"></header>
+        <div class="admin-content">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="btn-group mb-3">
+                <a th:href="@{/admin/borrows}" class="btn btn-sm"
+                   th:classappend="${selectedStatus == null or selectedStatus == ''} ? 'btn-primary' : 'btn-outline-primary'">Tất cả</a>
+                <a th:href="@{/admin/borrows(status='PENDING')}" class="btn btn-sm"
+                   th:classappend="${selectedStatus == 'PENDING'} ? 'btn-warning' : 'btn-outline-warning'">Chờ duyệt</a>
+                <a th:href="@{/admin/borrows(status='APPROVED')}" class="btn btn-sm"
+                   th:classappend="${selectedStatus == 'APPROVED'} ? 'btn-info' : 'btn-outline-info'">Đang mượn</a>
+                <a th:href="@{/admin/borrows(status='RETURNED')}" class="btn btn-sm"
+                   th:classappend="${selectedStatus == 'RETURNED'} ? 'btn-success' : 'btn-outline-success'">Đã trả</a>
+                <a th:href="@{/admin/borrows(status='REJECTED')}" class="btn btn-sm"
+                   th:classappend="${selectedStatus == 'REJECTED'} ? 'btn-danger' : 'btn-outline-danger'">Từ chối</a>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Mã phiếu</th>
+                        <th>Độc giả</th>
+                        <th>Số sách</th>
+                        <th>Ngày gửi</th>
+                        <th>Hạn trả</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(borrows)}">
+                        <td colspan="7" class="text-center py-4 text-muted">Không có phiếu mượn nào.</td>
+                    </tr>
+                    <tr th:each="req : ${borrows}">
+                        <td class="fw-semibold" th:text="${'#' + req.id}"></td>
+                        <td th:text="${req.user.fullName + ' (' + req.user.username + ')'}"></td>
+                        <td th:text="${#lists.size(req.details)}"></td>
+                        <td th:text="${req.requestDate != null ? #temporals.format(req.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                        <td th:text="${req.dueDate != null ? #temporals.format(req.dueDate, 'dd/MM/yyyy') : '-'}"></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${req.status == 'PENDING' ? 'bg-warning text-dark' :
+                                                   (req.status == 'APPROVED' ? 'bg-info text-dark' :
+                                                   (req.status == 'RETURNED' ? 'bg-success' : 'bg-danger'))}"
+                                  th:text="${req.status}"></span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{'/admin/borrows/' + ${req.id}}" class="btn btn-sm btn-primary">Xử lý / Chi tiết</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

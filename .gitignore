@@ -35,3 +35,11 @@ build/
 ### Librune Uploads ###
 uploads/
 
+### Android ###
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+android/*.iml
+
+

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${book.id != null ? 'Sửa sách' : 'Thêm sách mới'})}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar(${book.id != null ? 'Cập nhật Sách' : 'Thêm Sách Mới'})}"></header>
+        <div class="admin-content">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form th:action="@{/admin/books/save}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="id" th:value="${book.id}">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Tiêu đề sách *</label>
+                                <input type="text" class="form-control" name="title" th:value="${book.title}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Mã ISBN</label>
+                                <input type="text" class="form-control" name="isbn" th:value="${book.isbn}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Danh mục *</label>
+                                <select class="form-select" name="categoryId" required>
+                                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                            th:selected="${book.category != null and book.category.id == c.id}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Nhà xuất bản</label>
+                                <input type="text" class="form-control" name="publisher" th:value="${book.publisher}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Năm xuất bản</label>
+                                <input type="number" class="form-control" name="publishYear" th:value="${book.publishYear}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Tổng số lượng *</label>
+                                <input type="number" min="0" class="form-control" name="totalQuantity"
+                                       th:value="${book.totalQuantity != null ? book.totalQuantity : 1}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Số lượng còn *</label>
+                                <input type="number" min="0" class="form-control" name="availableQuantity"
+                                       th:value="${book.availableQuantity != null ? book.availableQuantity : 1}" required>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="featured" value="true"
+                                           id="featured" th:checked="${book.featured}">
+                                    <label class="form-check-label fw-semibold" for="featured">Đánh dấu Sách nổi bật</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tác giả (giữ Ctrl để chọn nhiều)</label>
+                                <select class="form-select" name="authorIds" multiple size="5">
+                                    <option th:each="a : ${authors}" th:value="${a.id}" th:text="${a.name}"
+                                            th:selected="${selectedAuthorIds.contains(a.id)}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Upload ảnh bìa (jpg/png/webp)</label>
+                                <input type="file" class="form-control mb-2" name="coverFile" accept=".jpg,.jpeg,.png,.webp">
+                                <label class="form-label small text-muted">Hoặc nhập URL ảnh bìa hiện có:</label>
+                                <input type="text" class="form-control" name="coverImage" th:value="${book.coverImage}"
+                                       placeholder="/uploads/books/... hoặc https://...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Mô tả nội dung</label>
+                                <textarea class="form-control" name="description" rows="4" th:text="${book.description}"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Lưu sách</button>
+                            <a th:href="@{/admin/books}" class="btn btn-outline-secondary">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

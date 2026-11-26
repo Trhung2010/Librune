@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý Độc giả')}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar('Quản lý Độc giả')}"></header>
+        <div class="admin-content">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card border-0 shadow-sm">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tài khoản</th>
+                        <th>Họ tên</th>
+                        <th>Email / SĐT</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(readers)}">
+                        <td colspan="6" class="text-center py-4 text-muted">Chưa có độc giả nào.</td>
+                    </tr>
+                    <tr th:each="r : ${readers}">
+                        <td th:text="${r.id}"></td>
+                        <td class="fw-semibold" th:text="${r.username}"></td>
+                        <td th:text="${r.fullName}"></td>
+                        <td>
+                            <div th:text="${r.email}"></div>
+                            <div class="small text-muted" th:text="${r.phone}"></div>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${r.status == 'ACTIVE'} ? 'bg-success' : 'bg-danger'"
+                                  th:text="${r.status}"></span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{'/admin/readers/' + ${r.id}}" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            <form th:action="@{'/admin/readers/' + ${r.id} + '/toggle-status'}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm"
+                                        th:classappend="${r.status == 'ACTIVE'} ? 'btn-outline-danger' : 'btn-outline-success'"
+                                        th:text="${r.status == 'ACTIVE' ? 'Khóa' : 'Mở khóa'}"></button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

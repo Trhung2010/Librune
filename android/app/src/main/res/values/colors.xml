@@ -1,0 +1,11 @@
+<resources>
+    <color name="librune_primary">#1E3A5F</color>
+    <color name="librune_accent">#2F6FED</color>
+    <color name="librune_bg">#F4F6F9</color>
+    <color name="librune_surface">#FFFFFF</color>
+    <color name="librune_text">#1E293B</color>
+    <color name="librune_muted">#64748B</color>
+    <color name="librune_success">#16A34A</color>
+    <color name="librune_warning">#D97706</color>
+    <color name="librune_danger">#DC2626</color>
+</resources>

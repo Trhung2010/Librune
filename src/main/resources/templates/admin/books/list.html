@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý Sách')}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar('Quản lý Sách')}"></header>
+        <div class="admin-content">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <form class="row g-2 align-items-center" th:action="@{/admin/books}" method="get">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="keyword" th:value="${keyword}"
+                                   placeholder="Tìm tên sách, ISBN, tác giả...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="categoryId">
+                                <option value="">-- Tất cả danh mục --</option>
+                                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                        th:selected="${categoryId != null and categoryId == c.id}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="availableOnly" value="true"
+                                       id="availableOnly" th:checked="${availableOnly}">
+                                <label class="form-check-label small" for="availableOnly">Còn sách</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-outline-primary">Lọc</button>
+                            <a th:href="@{/admin/books/new}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>Thêm sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Ảnh</th>
+                            <th>Tiêu đề / ISBN</th>
+                            <th>Danh mục</th>
+                            <th>Tác giả</th>
+                            <th>Tồn kho</th>
+                            <th>Nổi bật</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(books)}">
+                            <td colspan="7" class="text-center py-4 text-muted">Không có sách nào.</td>
+                        </tr>
+                        <tr th:each="b : ${books}">
+                            <td>
+                                <img th:if="${b.coverImage != null and !b.coverImage.isBlank()}"
+                                     th:src="${b.coverImage}" class="book-cover-thumb" alt="cover">
+                                <div th:if="${b.coverImage == null or b.coverImage.isBlank()}"
+                                     class="book-cover-thumb d-flex align-items-center justify-content-center text-muted">
+                                    <i class="bi bi-book"></i>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" th:text="${b.title}"></div>
+                                <div class="text-muted small" th:text="${b.isbn != null ? 'ISBN: ' + b.isbn : ''}"></div>
+                            </td>
+                            <td th:text="${b.category.name}"></td>
+                            <td>
+                                <span th:each="a, iter : ${b.authors}"
+                                      th:text="${a.name + (!iter.last ? ', ' : '')}"></span>
+                            </td>
+                            <td>
+                                <span th:text="${b.availableQuantity + ' / ' + b.totalQuantity}"></span>
+                            </td>
+                            <td>
+                                <span th:if="${b.featured}" class="badge bg-warning text-dark">Nổi bật</span>
+                                <span th:unless="${b.featured}" class="text-muted small">-</span>
+                            </td>
+                            <td class="text-end">
+                                <a th:href="@{'/admin/books/' + ${b.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                <form th:action="@{'/admin/books/' + ${b.id} + '/delete'}" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xác nhận xóa sách này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

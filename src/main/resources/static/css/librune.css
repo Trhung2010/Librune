@@ -1,0 +1,113 @@
+:root {
+    --librune-primary: #1e3a5f;
+    --librune-accent: #2f6fed;
+    --librune-bg: #f4f6f9;
+    --librune-surface: #ffffff;
+    --librune-border: #e2e8f0;
+}
+
+body {
+    background-color: var(--librune-bg);
+    color: #1e293b;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background: var(--librune-primary);
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-sidebar .brand {
+    padding: 1.25rem 1.25rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.82);
+    padding: 0.7rem 1.25rem;
+    border-radius: 0;
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.admin-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.admin-topbar {
+    background: var(--librune-surface);
+    border-bottom: 1px solid var(--librune-border);
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-content {
+    padding: 1.5rem;
+}
+
+.stat-card {
+    background: var(--librune-surface);
+    border: 1px solid var(--librune-border);
+    border-radius: 0.75rem;
+    padding: 1.2rem;
+}
+
+.stat-card .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--librune-primary);
+}
+
+.book-cover-thumb {
+    width: 48px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--librune-border);
+    background: #e2e8f0;
+}
+
+.hero-banner {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2f6fed 100%);
+    color: #ffffff;
+    border-radius: 1rem;
+    padding: 2.5rem;
+}
+
+.book-card-cover {
+    height: 210px;
+    object-fit: cover;
+    background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .admin-wrapper {
+        flex-direction: column;
+    }
+    .admin-sidebar {
+        width: 100%;
+    }
+}

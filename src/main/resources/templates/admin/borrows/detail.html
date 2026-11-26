@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Chi tiết Phiếu mượn')}"></head>
+<body>
+<div class="admin-wrapper">
+    <aside th:replace="~{fragments/layout :: sidebar(${activePage})}"></aside>
+    <div class="admin-main">
+        <header th:replace="~{fragments/layout :: topbar('Chi tiết Phiếu mượn #' + ${borrow.id})}"></header>
+        <div class="admin-content">
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center py-3">
+                            <span>Thông tin phiếu</span>
+                            <span class="badge"
+                                  th:classappend="${borrow.status == 'PENDING' ? 'bg-warning text-dark' :
+                                                   (borrow.status == 'APPROVED' ? 'bg-info text-dark' :
+                                                   (borrow.status == 'RETURNED' ? 'bg-success' : 'bg-danger'))}"
+                                  th:text="${borrow.status}"></span>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>Độc giả:</strong> <span th:text="${borrow.user.fullName + ' (' + borrow.user.username + ')'}"></span></p>
+                            <p class="mb-2"><strong>Ngày gửi:</strong> <span th:text="${borrow.requestDate != null ? #temporals.format(borrow.requestDate, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+                            <p class="mb-2"><strong>Ngày duyệt:</strong> <span th:text="${borrow.borrowDate != null ? #temporals.format(borrow.borrowDate, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+                            <p class="mb-2"><strong>Hạn trả:</strong> <span th:text="${borrow.dueDate != null ? #temporals.format(borrow.dueDate, 'dd/MM/yyyy') : '-'}"></span></p>
+                            <p class="mb-2"><strong>Ngày trả thực tế:</strong> <span th:text="${borrow.returnDate != null ? #temporals.format(borrow.returnDate, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+                            <p class="mb-0"><strong>Ghi chú:</strong> <span th:text="${borrow.note != null ? borrow.note : '-'}"></span></p>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white fw-bold py-3">Sách trong phiếu</div>
+                        <table class="table mb-0 align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Tên sách</th>
+                                <th>Số lượng mượn</th>
+                                <th>Còn trong kho</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="d : ${borrow.details}">
+                                <td class="fw-semibold" th:text="${d.book.title}"></td>
+                                <td th:text="${d.quantity}"></td>
+                                <td th:text="${d.book.availableQuantity + ' / ' + d.book.totalQuantity}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div th:if="${borrow.status == 'PENDING'}" class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white fw-bold py-3">Duyệt hoặc Từ chối phiếu</div>
+                        <div class="card-body">
+                            <form th:action="@{'/admin/borrows/' + ${borrow.id} + '/approve'}" method="post" class="mb-3">
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold">Hạn trả dự kiến</label>
+                                    <input type="date" class="form-control" name="dueDate" th:value="${defaultDueDate}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Ghi chú (tùy chọn)</label>
+                                    <input type="text" class="form-control" name="note" placeholder="Ghi chú cho độc giả...">
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 fw-semibold">
+                                    <i class="bi bi-check-circle me-1"></i>Duyệt &amp; Trừ tồn kho
+                                </button>
+                            </form>
+                            <hr>
+                            <form th:action="@{'/admin/borrows/' + ${borrow.id} + '/reject'}" method="post">
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold">Lý do từ chối</label>
+                                    <input type="text" class="form-control" name="note" placeholder="Nhập lý do từ chối...">
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger w-100">Từ chối phiếu</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div th:if="${borrow.status == 'APPROVED'}" class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white fw-bold py-3">Xác nhận trả sách</div>
+                        <div class="card-body">
+                            <form th:action="@{'/admin/borrows/' + ${borrow.id} + '/return'}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Ghi chú tình trạng sách khi trả</label>
+                                    <input type="text" class="form-control" name="note" placeholder="Nguyên vẹn / đầy đủ...">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                                    <i class="bi bi-arrow-return-left me-1"></i>Xác nhận đã trả &amp; Hoàn kho
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <a th:href="@{/admin/borrows}" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
